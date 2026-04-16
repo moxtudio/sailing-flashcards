@@ -68,7 +68,7 @@ const allCards = [
   { front: "Bearing", back: "The direction from one point to another, measured in degrees from north.", category: "Navigation" }
 ];
 
-let deck = [];
+let deck = allCards.map(c => ({ ...c, status: null }));
 let currentCat = "All";
 let studyIdx = 0;
 let quizIdx = 0;
@@ -160,6 +160,7 @@ function showStudyCard() {
   const cardEl = document.getElementById("card");
   if (flipped) cardEl.classList.add("flipped"); else cardEl.classList.remove("flipped");
   updateMarkCounts();
+  updateCounter();
 }
 
 function updateMarkCounts() {
@@ -341,14 +342,3 @@ function retryMissed() {
   updateCounter();
 }
 
-function init() {
-  filterDeck();
-  renderCatBar();
-  setMode("study");
-}
-
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", init);
-} else {
-  init();
-}
