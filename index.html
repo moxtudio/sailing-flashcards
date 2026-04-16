@@ -1,1 +1,310 @@
-file:///Users/jenniferbargisen/Desktop/NotebookLM.app/sailing-flashcards.html
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+const ALL_CARDS = [
+  { cat: "Orientation", q: "Starboard side", a: "Right hand side of the boat when facing forward", keywords: ["right", "forward"] },
+  { cat: "Orientation", q: "Port side", a: "Left hand side of the boat when facing forward. (Left and Port both have four letters.)", keywords: ["left", "forward", "four"] },
+  { cat: "Orientation", q: "Bow", a: "Front or forward end of the boat", keywords: ["front", "forward"] },
+  { cat: "Orientation", q: "Stern", a: "Back or aft end of the boat", keywords: ["back", "aft"] },
+  { cat: "Orientation", q: "Astern", a: "An object located behind the boat", keywords: ["behind", "object"] },
+  { cat: "Orientation", q: "Ahead", a: "An object located in front of the boat", keywords: ["front", "object"] },
+  { cat: "Orientation", q: "Windward side", a: "The side of the boat that the wind blows upon first", keywords: ["wind", "first", "blows"] },
+  { cat: "Orientation", q: "Leeward side", a: "The downwind side, or the side furthest away from the wind", keywords: ["downwind", "furthest", "away"] },
+  { cat: "Orientation", q: "Which changes when wind shifts: Port/Starboard or Windward/Leeward?", a: "Windward/Leeward changes. Port and Starboard are fixed.", keywords: ["windward", "leeward", "fixed"] },
+  { cat: "Orientation", q: "Starboard Tack", a: "When sailing and the wind is blowing onto the starboard (right) side. Your boom is to port.", keywords: ["wind", "starboard", "right", "boom", "port"] },
+  { cat: "Boat Parts", q: "Cockpit", a: "Area around and in front of the wheel where the crew spends most of their time adjusting sails, steering, and hanging out", keywords: ["wheel", "crew", "adjusting", "steering"] },
+  { cat: "Boat Parts", q: "Hull", a: "The floating body of the boat", keywords: ["floating", "body"] },
+  { cat: "Boat Parts", q: "Deck", a: "The component that encloses the top of the hull", keywords: ["top", "hull", "encloses"] },
+  { cat: "Boat Parts", q: "Lifelines", a: "Wire cables that run around the outside of the deck, a few feet up, to help keep crew aboard", keywords: ["wire", "cables", "outside", "deck", "aboard"] },
+  { cat: "Boat Parts", q: "Boom", a: "The horizontal pole that holds the bottom of the mainsail. Mind the Boom! It swings across when turning.", keywords: ["horizontal", "pole", "mainsail", "bottom", "swings"] },
+  { cat: "Boat Parts", q: "Mast", a: "Vertical pole that holds up the sails", keywords: ["vertical", "pole", "sails", "holds"] },
+  { cat: "Boat Parts", q: "Shrouds", a: "Wire cables that hold up the mast", keywords: ["wire", "cables", "mast"] },
+  { cat: "How It Works", q: "What is the sailor's boat fuel?", a: "The wind", keywords: ["wind"] },
+  { cat: "How It Works", q: "What aspects of wind must a sailor know?", a: "Direction and speed", keywords: ["direction", "speed"] },
+  { cat: "How It Works", q: "Clues to determine wind direction and speed?", a: "Ripples on the water, smoke, flags, other sailboats, windex, instruments", keywords: ["ripples", "smoke", "flags", "sailboats", "windex", "instruments"] },
+  { cat: "How It Works", q: "What part of an airplane works like a sailboat?", a: "The wing. Both have a foil shape.", keywords: ["wing", "foil"] },
+  { cat: "How It Works", q: "What force do sailboats share with airplanes?", a: "Lift", keywords: ["lift"] },
+  { cat: "How It Works", q: "What are the 2 major forces that move a sailboat forward?", a: "1. Lifting force of the wind on the sails. 2. Resisting force of the water against the keel.", keywords: ["lift", "wind", "sails", "resist", "water", "keel"] },
+  { cat: "Points of Sail", q: "No-Sail Zone (NSZ)", a: "90 degrees total: 45 degrees on either side of where the wind is blowing from. Sailboats cannot sail into this zone.", keywords: ["90", "45", "degrees", "wind"] },
+  { cat: "Points of Sail", q: "In Irons", a: "Heading upwind with the wind coming from the no-sail zone. Sails are luffing. The boat is stuck.", keywords: ["upwind", "no-sail", "luffing", "stuck"] },
+  { cat: "Points of Sail", q: "Close-Hauled", a: "Sailing upwind on the edge of the NSZ. Sails hauled in as close as possible to the center line.", keywords: ["upwind", "edge", "nsz", "hauled", "close", "center"] },
+  { cat: "Points of Sail", q: "Close Reach", a: "Boat headed upwind at about 10 or 2 o'clock", keywords: ["10", "2", "upwind"] },
+  { cat: "Points of Sail", q: "Beam Reach", a: "Boat at about 3 or 9 o'clock. Wind coming directly over the beam (widest part of the boat).", keywords: ["3", "9", "beam", "widest"] },
+  { cat: "Points of Sail", q: "Broad Reach", a: "Boat headed downwind at about 3:30 or 7:30 o'clock", keywords: ["downwind"] },
+  { cat: "Points of Sail", q: "Run", a: "Boat headed directly downwind, between 5 and 7 o'clock", keywords: ["downwind", "5", "7", "directly"] },
+  { cat: "Points of Sail", q: "What is the clock-like diagram showing wind direction relative to a sailboat?", a: "Points of Sail", keywords: ["points", "sail"] },
+  { cat: "Rigging", q: "Mainsheet", a: "Line used to control the angle of the mainsail to the wind", keywords: ["line", "angle", "mainsail", "wind", "control"] },
+  { cat: "Rigging", q: "Halyard", a: "Line used to raise the mainsail", keywords: ["line", "raise", "mainsail"] },
+  { cat: "Rigging", q: "Mainsail", a: "The largest sail", keywords: ["largest", "sail"] },
+  { cat: "Rigging", q: "Jib", a: "The smaller sail located forward of the mainsail", keywords: ["smaller", "sail", "forward", "mainsail"] },
+  { cat: "Rigging", q: "Line", a: "A rope with a useful purpose (or job) on a sailboat", keywords: ["rope", "purpose", "job"] },
+  { cat: "Rigging", q: "Furling Line", a: "The line used to wind up the jib and reduce its size", keywords: ["jib", "reduce", "size"] },
+  { cat: "Rigging", q: "Reef the Main", a: "Reducing the size of the mainsail by lowering it", keywords: ["reducing", "size", "mainsail", "lowering"] },
+  { cat: "Commands", q: "What is the helmsperson's main job?", a: "Drive the boat and give directional commands", keywords: ["drive", "directional", "commands"] },
+  { cat: "Commands", q: "What is the sail trimmer's main job?", a: "Trim sails correctly and talk about sail trim", keywords: ["trim", "sails", "correctly", "talk"] },
+  { cat: "Commands", q: "What are the only 2 ways to position the sails?", a: "Ease out or Trim in", keywords: ["ease", "trim"] },
+  { cat: "Commands", q: "Trim the main means...", a: "Pull in or tighten the mainsheet", keywords: ["pull", "tighten", "mainsheet"] },
+  { cat: "Commands", q: "Ease the main means...", a: "Let out or loosen the mainsheet", keywords: ["let out", "loosen", "mainsheet"] },
+  { cat: "Commands", q: "Head up = what sail action?", a: "Trim (pull in) the main and jib sheet", keywords: ["trim", "pull", "main", "jib"] },
+  { cat: "Commands", q: "Head down = what sail action?", a: "Ease (let out) the main and jib sheet", keywords: ["ease", "let out", "main", "jib"] },
+  { cat: "Commands", q: "What gives mechanical advantage when trimming?", a: "The winch", keywords: ["winch"] },
+  { cat: "Commands", q: "Tacking", a: "Maneuver to get upwind. The bow crosses the wind. Command sequence: Ready to tack? / Ready! / Tacking!", keywords: ["upwind", "bow", "crosses", "ready"] },
+  { cat: "Commands", q: "Gybing (Jibing)", a: "Turning downwind. The stern crosses the wind. Command sequence: Ready to jibe? / Ready! / Gybing!", keywords: ["downwind", "stern", "crosses", "ready"] },
+  { cat: "Commands", q: "What are the 2 fundamental maneuvers for crossing the wind?", a: "Tack and Gybe", keywords: ["tack", "gybe", "jibe"] },
+  { cat: "Miscellaneous", q: "Fenders", a: "Inflatable devices used to protect the sides of a boat", keywords: ["inflatable", "protect", "sides"] },
+  { cat: "Miscellaneous", q: "Pelican Hooks", a: "Hooks that fasten the lifeline to the stanchion", keywords: ["fasten", "lifeline", "stanchion"] },
+  { cat: "Miscellaneous", q: "S.L.O.W.", a: "An acronym for remembering the rules of the road", keywords: ["acronym", "rules", "road"] },
+  { cat: "Miscellaneous", q: "Rules of the Road", a: "How one determines which boat has right of way when two or more boats are on a collision course", keywords: ["right of way", "collision", "boats"] },
+  { cat: "Miscellaneous", q: "Buoys", a: "Navigation markers. They are either red or green.", keywords: ["red", "green", "navigation", "markers"] },
+  { cat: "Miscellaneous", q: "When in doubt?", a: "Let it out.", keywords: ["let it out"] },
+  { cat: "Miscellaneous", q: "Landlubber", a: "Someone new to sailing", keywords: ["new", "sailing"] },
+  { cat: "Miscellaneous", q: "Best way to dress for sailing?", a: "Layered clothes", keywords: ["layered", "layers", "clothes"] },
+  { cat: "Miscellaneous", q: "3 considerations for a sailing trip?", a: "Weather, water/air temperatures, season, type of boat", keywords: ["weather", "temperature", "season", "boat"] },
+  { cat: "Miscellaneous", q: "2 key things when boarding at the dock?", a: "1. Make sure the boat is close. 2. Transfer weight slowly and directly downward, then bring other foot aboard.", keywords: ["close", "weight", "slowly", "downward", "foot"] },
+];
+
+const CATEGORIES = ["All", ...new Set(ALL_CARDS.map(c => c.cat))];
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function gradeAnswer(userAnswer, card) {
+  const ua = userAnswer.toLowerCase().trim();
+  if (!ua) return 'incorrect';
+  const ca = card.a.toLowerCase();
+  const kw = card.keywords || [];
+  if (ua === ca || ca.includes(ua) || ua.includes(ca)) return 'correct';
+  let matched = 0;
+  for (const k of kw) { if (ua.includes(k.toLowerCase())) matched++; }
+  const ratio = kw.length > 0 ? matched / kw.length : 0;
+  if (ratio >= 0.6) return 'correct';
+  if (ratio >= 0.3) return 'partial';
+  const caWords = ca.split(/\W+/).filter(w => w.length > 3);
+  let wordMatches = 0;
+  for (const w of caWords) { if (ua.includes(w)) wordMatches++; }
+  const wordRatio = caWords.length > 0 ? wordMatches / caWords.length : 0;
+  if (wordRatio >= 0.5) return 'correct';
+  if (wordRatio >= 0.25) return 'partial';
+  return 'incorrect';
+}
+
+export default function SailingFlashCardsPage() {
+  const navigate = useNavigate();
+  const [mode, setMode] = useState('study');
+  const [activeCategory, setActiveCategory] = useState('All');
+  const [deck, setDeck] = useState(ALL_CARDS);
+  const [index, setIndex] = useState(0);
+  const [flipped, setFlipped] = useState(false);
+  const [known, setKnown] = useState(new Set());
+  const [studyMore, setStudyMore] = useState(new Set());
+  const [quizInput, setQuizInput] = useState('');
+  const [quizResults, setQuizResults] = useState({});
+  const [showScore, setShowScore] = useState(false);
+
+  const handleCat = (cat) => {
+    setActiveCategory(cat);
+    const d = cat === 'All' ? ALL_CARDS : ALL_CARDS.filter(c => c.cat === cat);
+    setDeck(d); setIndex(0); setFlipped(false); setQuizResults({}); setShowScore(false);
+  };
+
+  const handleShuffle = () => {
+    setDeck(shuffle(deck)); setIndex(0); setFlipped(false); setQuizResults({}); setShowScore(false);
+  };
+
+  const handleMode = (m) => {
+    setMode(m); setIndex(0); setFlipped(false); setQuizResults({}); setShowScore(false); setQuizInput('');
+  };
+
+  const handleMark = (type) => {
+    const key = deck[index].q;
+    if (type === 'know') { setKnown(p => new Set([...p, key])); setStudyMore(p => { const s = new Set(p); s.delete(key); return s; }); }
+    else { setStudyMore(p => new Set([...p, key])); setKnown(p => { const s = new Set(p); s.delete(key); return s; }); }
+    setIndex((index + 1) % deck.length); setFlipped(false);
+  };
+
+  const handleSubmit = () => {
+    if (!quizInput.trim()) return;
+    const grade = gradeAnswer(quizInput, deck[index]);
+    const newResults = { ...quizResults, [index]: { grade, yourAnswer: quizInput } };
+    setQuizResults(newResults);
+    if (Object.keys(newResults).length === deck.length) setTimeout(() => setShowScore(true), 800);
+  };
+
+  const retryAll = () => { setQuizResults({}); setIndex(0); setShowScore(false); setQuizInput(''); setDeck(shuffle(deck)); };
+
+  const retryMissed = () => {
+    const missed = Object.entries(quizResults).filter(([,r]) => r.grade !== 'correct').map(([i]) => deck[parseInt(i)]);
+    if (!missed.length) { retryAll(); return; }
+    setDeck(missed); setQuizResults({}); setIndex(0); setShowScore(false); setQuizInput('');
+  };
+
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (mode === 'study') {
+        if (e.key === 'ArrowRight') { setIndex(i => (i + 1) % deck.length); setFlipped(false); }
+        if (e.key === 'ArrowLeft') { setIndex(i => (i - 1 + deck.length) % deck.length); setFlipped(false); }
+        if (e.key === ' ' && document.activeElement.tagName !== 'TEXTAREA') { e.preventDefault(); setFlipped(f => !f); }
+      }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [mode, deck.length]);
+
+  useEffect(() => {
+    if (mode === 'quiz') setQuizInput(quizResults[index]?.yourAnswer || '');
+  }, [index, mode]);
+
+  const correct = Object.values(quizResults).filter(r => r.grade === 'correct').length;
+  const partial = Object.values(quizResults).filter(r => r.grade === 'partial').length;
+  const wrong = Object.values(quizResults).filter(r => r.grade === 'incorrect').length;
+  const pct = deck.length === 0 ? 0 : Math.round(((correct + partial * 0.5) / deck.length) * 100);
+  const currentResult = quizResults[index];
+  const answered = !!currentResult;
+
+  const C = {
+    page: { display:'flex', flexDirection:'column', minHeight:'100vh', background:'#0a1628', color:'#e8edf3', fontFamily:"system-ui, sans-serif" },
+    bar: { display:'flex', alignItems:'center', gap:16, padding:'12px 20px', background:'#0d1e36', borderBottom:'1px solid #1e3050' },
+    backBtn: { background:'transparent', border:'1px solid #2a3a52', color:'#7a8ba3', padding:'8px 16px', borderRadius:20, cursor:'pointer', fontSize:14, fontWeight:600 },
+    main: { display:'flex', flexDirection:'column', alignItems:'center', padding:'24px 16px' },
+    toggle: { display:'flex', background:'#12243e', borderRadius:28, padding:4, marginBottom:24, border:'1px solid #2a3a52' },
+    modeBtn: (a) => ({ padding:'10px 28px', borderRadius:24, border:'none', fontSize:14, fontWeight:600, cursor:'pointer', background:a?'#4a9eff':'transparent', color:a?'#fff':'#5a7a9a' }),
+    catBar: { display:'flex', gap:8, flexWrap:'wrap', justifyContent:'center', marginBottom:24, maxWidth:800 },
+    catBtn: (a) => ({ padding:'8px 16px', borderRadius:20, border:`1px solid ${a?'#4a9eff':'#2a3a52'}`, background:a?'#4a9eff':'transparent', color:a?'#fff':'#7a8ba3', fontSize:13, cursor:'pointer' }),
+    progress: { display:'flex', alignItems:'center', gap:12, marginBottom:20, fontSize:14, color:'#7a8ba3' },
+    pBar: { width:200, height:6, background:'#1a2a42', borderRadius:3, overflow:'hidden' },
+    pFill: (p) => ({ height:'100%', background:'linear-gradient(90deg,#4a9eff,#6fbbff)', borderRadius:3, width:`${p}%`, transition:'width 0.4s' }),
+    cardWrap: { perspective:1000, width:'100%', maxWidth:620, minHeight:340, marginBottom:24, cursor:'pointer' },
+    card: (f) => ({ width:'100%', minHeight:340, position:'relative', transformStyle:'preserve-3d', transition:'transform 0.5s', transform:f?'rotateY(180deg)':'none' }),
+    face: (b) => ({ position:'absolute', width:'100%', minHeight:340, backfaceVisibility:'hidden', WebkitBackfaceVisibility:'hidden', borderRadius:16, display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center', padding:36, textAlign:'center', background:b?'linear-gradient(145deg,#0d3a2e,#164a3a)':'linear-gradient(145deg,#12243e,#1a3158)', border:b?'1px solid #2a6e5a':'1px solid #2a4a6e', transform:b?'rotateY(180deg)':'none' }),
+    label: (b) => ({ fontSize:11, textTransform:'uppercase', letterSpacing:2, color:b?'#4ae0b0':'#4a9eff', marginBottom:16 }),
+    cardText: (b) => ({ fontSize:22, fontWeight:600, lineHeight:1.4, color:b?'#c8f0e0':'#e8edf3' }),
+    hint: { position:'absolute', bottom:16, fontSize:12, color:'#4a6a8a' },
+    tag: { position:'absolute', top:16, right:20, fontSize:11, color:'#3a5a7a', background:'#0a1628', padding:'4px 10px', borderRadius:10 },
+    navRow: { display:'flex', gap:12, alignItems:'center', marginBottom:24 },
+    navBtn: { width:48, height:48, borderRadius:'50%', border:'1px solid #2a3a52', background:'#12243e', color:'#7a8ba3', fontSize:20, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' },
+    shuf: { padding:'10px 24px', borderRadius:24, border:'1px solid #2a3a52', background:'#12243e', color:'#7a8ba3', fontSize:14, cursor:'pointer' },
+    markRow: { display:'flex', gap:12 },
+    markBtn: (t) => ({ padding:'10px 20px', borderRadius:12, border:'none', fontSize:14, fontWeight:600, cursor:'pointer', background:t==='know'?'#1a3a2e':'#3a2020', color:t==='know'?'#4ae0b0':'#ff7a7a' }),
+    scores: { display:'flex', gap:24, marginTop:16, fontSize:13, color:'#5a7a9a' },
+    dot: (c) => ({ width:8, height:8, borderRadius:'50%', background:c, display:'inline-block', marginRight:6 }),
+    qCard: { width:'100%', maxWidth:620, background:'linear-gradient(145deg,#12243e,#1a3158)', border:'1px solid #2a4a6e', borderRadius:16, padding:36, marginBottom:24, textAlign:'center' },
+    qQ: { fontSize:22, fontWeight:600, lineHeight:1.4, marginBottom:24 },
+    ta: { width:'100%', minHeight:80, padding:'14px 16px', borderRadius:12, border:'1px solid #2a4a6e', background:'#0a1628', color:'#e8edf3', fontSize:16, fontFamily:'inherit', resize:'vertical', outline:'none', marginBottom:20, display:'block' },
+    subBtn: (d) => ({ padding:'12px 32px', borderRadius:24, border:'none', background:d?'#2a4a6e':'#4a9eff', color:'#fff', fontSize:15, fontWeight:600, cursor:d?'default':'pointer' }),
+    resBox: (g) => ({ width:'100%', maxWidth:620, borderRadius:12, padding:'20px 24px', marginBottom:20, background:g==='correct'?'#0d3a2e':g==='partial'?'#2a2a10':'#3a1a1a', border:g==='correct'?'1px solid #2a6e5a':g==='partial'?'1px solid #6e6a2a':'1px solid #6e2a2a' }),
+    resHead: (g) => ({ fontSize:16, fontWeight:700, marginBottom:8, color:g==='correct'?'#4ae0b0':g==='partial'?'#e0d04a':'#ff7a7a' }),
+    resLabel: { fontSize:12, color:'#7a8ba3', marginTop:10, marginBottom:4 },
+    resAns: { fontSize:15, color:'#c8f0e0', lineHeight:1.5 },
+    resYours: { fontSize:15, color:'#a0b0c0', lineHeight:1.5, fontStyle:'italic' },
+    panel: { width:'100%', maxWidth:620, background:'#12243e', borderRadius:16, border:'1px solid #2a3a52', padding:'28px 32px', marginBottom:24, textAlign:'center' },
+    pct: (p) => ({ fontSize:48, fontWeight:700, marginBottom:4, color:p>=80?'#4ae0b0':p>=50?'#e0d04a':'#ff7a7a' }),
+    grid: { display:'flex', justifyContent:'center', gap:32, marginBottom:16 },
+    stat: { display:'flex', flexDirection:'column', alignItems:'center' },
+    num: (c) => ({ fontSize:36, fontWeight:700, color:c }),
+    retry: { padding:'12px 32px', borderRadius:24, border:'1px solid #4a9eff', background:'transparent', color:'#4a9eff', fontSize:15, fontWeight:600, cursor:'pointer', margin:'0 6px' },
+  };
+
+  return (
+    <div style={C.page}>
+      <div style={C.bar}>
+        <button style={C.backBtn} onClick={() => navigate('/studylab')}>← Back to Study Lab</button>
+        <span style={{color:'#4a6a8a', fontSize:14}}>Sailing Flash Cards · EL1 · Week 5</span>
+      </div>
+      <div style={C.main}>
+        <h1 style={{fontSize:28, fontWeight:700, marginBottom:4, color:'#fff'}}>Sailing Flash Cards</h1>
+        <p style={{fontSize:14, color:'#7a8ba3', marginBottom:20}}>Executive Leadership 1 | Week 5 · 57 cards</p>
+        <div style={C.toggle}>
+          <button style={C.modeBtn(mode==='study')} onClick={() => handleMode('study')}>Study Mode</button>
+          <button style={C.modeBtn(mode==='quiz')} onClick={() => handleMode('quiz')}>Quiz Mode</button>
+        </div>
+        <div style={C.catBar}>
+          {CATEGORIES.map(cat => <button key={cat} style={C.catBtn(activeCategory===cat)} onClick={() => handleCat(cat)}>{cat}</button>)}
+        </div>
+        <div style={C.progress}>
+          <span>{index+1} / {deck.length}</span>
+          <div style={C.pBar}><div style={C.pFill(((index+1)/deck.length)*100)} /></div>
+        </div>
+
+        {mode === 'study' && <>
+          <div style={C.cardWrap} onClick={() => setFlipped(f => !f)}>
+            <div style={C.card(flipped)}>
+              <div style={C.face(false)}>
+                <div style={C.tag}>{deck[index]?.cat}</div>
+                <div style={C.label(false)}>Term / Question</div>
+                <div style={C.cardText(false)}>{deck[index]?.q}</div>
+                <div style={C.hint}>tap to flip</div>
+              </div>
+              <div style={C.face(true)}>
+                <div style={C.label(true)}>Answer</div>
+                <div style={C.cardText(true)}>{deck[index]?.a}</div>
+                <div style={C.hint}>tap to flip back</div>
+              </div>
+            </div>
+          </div>
+          <div style={C.navRow}>
+            <button style={C.navBtn} onClick={() => { setIndex((index-1+deck.length)%deck.length); setFlipped(false); }}>←</button>
+            <button style={C.shuf} onClick={handleShuffle}>Shuffle</button>
+            <button style={C.navBtn} onClick={() => { setIndex((index+1)%deck.length); setFlipped(false); }}>→</button>
+          </div>
+          <div style={C.markRow}>
+            <button style={C.markBtn('know')} onClick={() => handleMark('know')}>Got it</button>
+            <button style={C.markBtn('study')} onClick={() => handleMark('study')}>Study more</button>
+          </div>
+          <div style={C.scores}>
+            <span><span style={C.dot('#4ae0b0')} />{known.size} known</span>
+            <span><span style={C.dot('#ff7a7a')} />{studyMore.size} to review</span>
+          </div>
+        </>}
+
+        {mode === 'quiz' && !showScore && <>
+          <div style={C.qCard}>
+            <div style={{...C.tag, position:'static', display:'inline-block', marginBottom:16}}>{deck[index]?.cat}</div>
+            <div style={C.label(false)}>Question</div>
+            <div style={C.qQ}>{deck[index]?.q}</div>
+            <textarea style={C.ta} value={quizInput} onChange={e => setQuizInput(e.target.value)} disabled={answered} placeholder="Type your answer..."
+              onKeyDown={e => { if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); if (!answered) handleSubmit(); else setIndex((index+1)%deck.length); }}} />
+            <button style={C.subBtn(answered)} disabled={answered} onClick={handleSubmit}>Check Answer</button>
+          </div>
+          {currentResult && <div style={C.resBox(currentResult.grade)}>
+            <div style={C.resHead(currentResult.grade)}>{currentResult.grade==='correct'?'Nailed it!':currentResult.grade==='partial'?"Close! You're on the right track.":"Not quite. Here's the answer:"}</div>
+            <div style={C.resLabel}>Your answer:</div>
+            <div style={C.resYours}>{currentResult.yourAnswer}</div>
+            <div style={C.resLabel}>Correct answer:</div>
+            <div style={C.resAns}>{deck[index]?.a}</div>
+          </div>}
+          <div style={C.navRow}>
+            <button style={C.navBtn} onClick={() => setIndex((index-1+deck.length)%deck.length)}>←</button>
+            <button style={C.shuf} onClick={handleShuffle}>Shuffle</button>
+            <button style={C.navBtn} onClick={() => setIndex((index+1)%deck.length)}>→</button>
+          </div>
+          <div style={C.scores}>
+            <span><span style={C.dot('#4ae0b0')} />{correct} correct</span>
+            <span><span style={C.dot('#e0d04a')} />{partial} partial</span>
+            <span><span style={C.dot('#ff7a7a')} />{wrong} missed</span>
+            <span style={{color:'#4a6a8a'}}>|</span>
+            <span>{Object.keys(quizResults).length} / {deck.length} answered</span>
+          </div>
+        </>}
+
+        {mode === 'quiz' && showScore && <div style={C.panel}>
+          <div style={{fontSize:20, fontWeight:700, marginBottom:16}}>Quiz Complete!</div>
+          <div style={C.pct(pct)}>{pct}%</div>
+          <div style={{fontSize:14, color:'#7a8ba3', marginBottom:20}}>overall score</div>
+          <div style={C.grid}>
+            <div style={C.stat}><div style={C.num('#4ae0b0')}>{correct}</div><div style={{fontSize:12,color:'#5a7a9a',marginTop:4}}>Correct</div></div>
+            <div style={C.stat}><div style={C.num('#e0d04a')}>{partial}</div><div style={{fontSize:12,color:'#5a7a9a',marginTop:4}}>Partial</div></div>
+            <div style={C.stat}><div style={C.num('#ff7a7a')}>{wrong}</div><div style={{fontSize:12,color:'#5a7a9a',marginTop:4}}>Missed</div></div>
+          </div>
+          <button style={C.retry} onClick={retryAll}>Retry All</button>
+          <button style={C.retry} onClick={retryMissed}>Retry Missed Only</button>
+        </div>}
+      </div>
+    </div>
+  );
+}
