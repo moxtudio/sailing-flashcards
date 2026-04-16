@@ -17,7 +17,7 @@
     .cat-btn.active { background: #4a9eff; color: #fff; border-color: #4a9eff; }
     .progress-row { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; font-size: 14px; color: #7a8ba3; }
     .progress-bar { width: 200px; height: 6px; background: #1a2a42; border-radius: 3px; overflow: hidden; }
-    .progress-fill { height: 100%; background: linear-gradient(90deg, #4a9eff, #6fbbff); border-radius: 3px; transition: width 0.4s ease; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #4a9eff, #6fbbff); border-radius: 3px; transition: width 0.4s ease; width: 0%; }
     .card-container { perspective: 1000px; width: 100%; max-width: 620px; min-height: 340px; margin-bottom: 24px; cursor: pointer; }
     .card { width: 100%; min-height: 340px; position: relative; transform-style: preserve-3d; transition: transform 0.5s ease; }
     .card.flipped { transform: rotateY(180deg); }
@@ -27,7 +27,7 @@
     .card-label { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #4a9eff; margin-bottom: 16px; }
     .card-back .card-label { color: #4ae0b0; }
     .card-text { font-size: 22px; font-weight: 600; line-height: 1.4; }
-    .card-back .card-text { color: #c8f0e0; }
+    .card-back .card-text { color: #c8f0e0; font-size: 18px; }
     .card-hint { position: absolute; bottom: 16px; font-size: 12px; color: #4a6a8a; }
     .card-category { position: absolute; top: 16px; right: 20px; font-size: 11px; color: #3a5a7a; background: #0a1628; padding: 4px 10px; border-radius: 10px; }
     .nav-row { display: flex; gap: 12px; align-items: center; margin-bottom: 24px; }
@@ -41,7 +41,7 @@
     .score-row span { display: flex; align-items: center; gap: 6px; }
     .dot-green { width: 8px; height: 8px; border-radius: 50%; background: #4ae0b0; }
     .dot-red { width: 8px; height: 8px; border-radius: 50%; background: #ff7a7a; }
-    .quiz-card { width: 100%; max-width: 620px; background: linear-gradient(145deg, #12243e, #1a3158); border: 1px solid #2a4a6e; border-radius: 16px; padding: 36px; margin-bottom: 24px; text-align: center; }
+    .quiz-card { width: 100%; max-width: 620px; background: linear-gradient(145deg, #12243e, #1a3158); border: 1px solid #2a4a6e; border-radius: 16px; padding: 36px; margin-bottom: 24px; text-align: center; position: relative; }
     .quiz-question { font-size: 22px; font-weight: 600; line-height: 1.4; margin-bottom: 24px; }
     .quiz-textarea { width: 100%; min-height: 80px; padding: 14px 16px; border-radius: 12px; border: 1px solid #2a4a6e; background: #0a1628; color: #e8edf3; font-size: 16px; font-family: inherit; resize: vertical; outline: none; margin-bottom: 20px; display: block; }
     .submit-btn { padding: 12px 32px; border-radius: 24px; border: none; background: #4a9eff; color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; }
@@ -58,7 +58,7 @@
     .result-answer { font-size: 15px; color: #c8f0e0; line-height: 1.5; }
     .result-yours { font-size: 15px; color: #a0b0c0; line-height: 1.5; font-style: italic; }
     .quiz-score-panel { width: 100%; max-width: 620px; background: #12243e; border-radius: 16px; border: 1px solid #2a3a52; padding: 28px 32px; margin-bottom: 24px; text-align: center; display: none; }
-    .quiz-pct { font-size: 48px; font-weight: 700; margin-bottom: 4px; }
+    .quiz-pct { font-size: 48px; font-weight: 700; margin-bottom: 4px; color: #4a9eff; }
     .quiz-score-grid { display: flex; justify-content: center; gap: 32px; margin-bottom: 16px; }
     .quiz-score-num { font-size: 36px; font-weight: 700; }
     .quiz-score-num.green { color: #4ae0b0; }
@@ -69,8 +69,8 @@
   </style>
 </head>
 <body>
-  <h1>⛵ Sailing Flash Cards</h1>
-  <p class="subtitle">Executive Leadership 1 | Week 5 · 57 cards</p>
+  <h1>Sailing Flash Cards</h1>
+  <p class="subtitle">Executive Leadership 1 | Week 5 &middot; 57 cards</p>
   <div class="mode-toggle">
     <button class="mode-btn active" id="studyModeBtn" onclick="setMode('study')">Study Mode</button>
     <button class="mode-btn" id="quizModeBtn" onclick="setMode('quiz')">Quiz Mode</button>
@@ -97,9 +97,9 @@
       </div>
     </div>
     <div class="nav-row">
-      <button class="nav-btn" onclick="prevCard()">←</button>
+      <button class="nav-btn" onclick="prevCard()">&larr;</button>
       <button class="shuffle-btn" onclick="shuffleDeck()">Shuffle</button>
-      <button class="nav-btn" onclick="nextCard()">→</button>
+      <button class="nav-btn" onclick="nextCard()">&rarr;</button>
     </div>
     <div class="mark-row">
       <button class="mark-btn know" onclick="markCard('know')">Got it</button>
@@ -126,9 +126,9 @@
       <div class="result-answer" id="resultAnswer"></div>
     </div>
     <div class="nav-row">
-      <button class="nav-btn" onclick="prevQuiz()">←</button>
+      <button class="nav-btn" onclick="prevQuiz()">&larr;</button>
       <button class="shuffle-btn" onclick="shuffleDeck()">Shuffle</button>
-      <button class="nav-btn" onclick="nextQuiz()">→</button>
+      <button class="nav-btn" onclick="nextQuiz()">&rarr;</button>
     </div>
     <div class="score-row">
       <span><div class="dot-green"></div><span id="qCorrect">0</span> correct</span>
@@ -147,7 +147,10 @@
       <button class="retry-btn" onclick="retryMissed()">Retry Missed</button>
     </div>
   </div>
+  <script src="cards.js?v=2"></script>
   <script>
-    <script src="cards.js"></script>
+    renderCatBar();
+    showStudyCard();
+  </script>
 </body>
 </html>
