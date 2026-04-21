@@ -3,83 +3,165 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sailing Flash Cards</title>
+  <title>Dock Stars Sailing Flash Cards</title>
   <style>
+    :root {
+      --ds-blue: #2b5cb8;
+      --ds-blue-light: #4a7dd4;
+      --ds-navy: #1e2d6b;
+      --ds-red: #d94026;
+      --ds-gold: #f5a623;
+      --ds-green: #2a8056;
+      --ds-bg: #f5f7fb;
+      --ds-surface: #ffffff;
+      --ds-surface-2: #eef2f9;
+      --ds-border: #d4dcea;
+      --ds-text: #1a2238;
+      --ds-text-dim: #5a6781;
+    }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a1628; color: #e8edf3; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 24px 16px; }
-    h1 { font-size: 28px; font-weight: 700; margin-bottom: 4px; color: #fff; }
-    .subtitle { font-size: 14px; color: #7a8ba3; margin-bottom: 20px; }
-    .mode-toggle { display: flex; background: #12243e; border-radius: 28px; padding: 4px; margin-bottom: 24px; border: 1px solid #2a3a52; }
-    .mode-btn { padding: 10px 28px; border-radius: 24px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; background: transparent; color: #5a7a9a; transition: all 0.25s; }
-    .mode-btn.active { background: #4a9eff; color: #fff; }
-    .category-bar { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 24px; max-width: 800px; }
-    .cat-btn { padding: 8px 16px; border-radius: 20px; border: 1px solid #2a3a52; background: transparent; color: #7a8ba3; font-size: 13px; cursor: pointer; transition: all 0.2s; }
-    .cat-btn.active { background: #4a9eff; color: #fff; border-color: #4a9eff; }
-    .progress-row { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; font-size: 14px; color: #7a8ba3; }
-    .progress-bar { width: 200px; height: 6px; background: #1a2a42; border-radius: 3px; overflow: hidden; }
-    .progress-fill { height: 100%; background: linear-gradient(90deg, #4a9eff, #6fbbff); border-radius: 3px; transition: width 0.4s ease; width: 0%; }
-    .card-container { perspective: 1000px; width: 100%; max-width: 620px; min-height: 340px; margin-bottom: 24px; cursor: pointer; }
-    .card { width: 100%; min-height: 340px; position: relative; transform-style: preserve-3d; transition: transform 0.5s ease; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--ds-bg); color: var(--ds-text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 24px 16px; }
+    .brand-row { display: flex; align-items: center; gap: 16px; margin-bottom: 8px; }
+    .brand-logo { width: 72px; height: 72px; flex-shrink: 0; }
+    .brand-title h1 { font-size: 30px; font-weight: 800; color: var(--ds-navy); letter-spacing: 0.5px; line-height: 1.1; }
+    .brand-title h1 .accent { color: var(--ds-red); }
+    .subtitle { font-size: 14px; color: var(--ds-text-dim); margin-bottom: 24px; }
+    .mode-toggle { display: flex; background: var(--ds-surface); border-radius: 32px; padding: 5px; margin-bottom: 24px; border: 1px solid var(--ds-border); box-shadow: 0 2px 6px rgba(30, 45, 107, 0.06); }
+    .mode-btn { padding: 10px 24px; border-radius: 28px; border: none; font-size: 14px; font-weight: 700; cursor: pointer; background: transparent; color: var(--ds-text-dim); transition: all 0.2s; }
+    .mode-btn.active { background: var(--ds-blue); color: #fff; box-shadow: 0 2px 8px rgba(43, 92, 184, 0.3); }
+    .category-bar { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 24px; max-width: 860px; }
+    .cat-btn { padding: 8px 16px; border-radius: 20px; border: 1px solid var(--ds-border); background: var(--ds-surface); color: var(--ds-text-dim); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .cat-btn:hover { border-color: var(--ds-blue); color: var(--ds-blue); }
+    .cat-btn.active { background: var(--ds-navy); color: #fff; border-color: var(--ds-navy); }
+    .progress-row { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; font-size: 14px; color: var(--ds-text-dim); font-weight: 600; }
+    .progress-bar { width: 240px; height: 8px; background: var(--ds-surface-2); border-radius: 4px; overflow: hidden; border: 1px solid var(--ds-border); }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--ds-blue), var(--ds-gold)); border-radius: 4px; transition: width 0.4s ease; width: 0%; }
+
+    /* Flash cards - larger */
+    .card-container { perspective: 1400px; width: 100%; max-width: 860px; min-height: 520px; margin-bottom: 24px; cursor: pointer; }
+    .card { width: 100%; min-height: 520px; position: relative; transform-style: preserve-3d; transition: transform 0.55s ease; }
     .card.flipped { transform: rotateY(180deg); }
-    .card-face { position: absolute; width: 100%; min-height: 340px; backface-visibility: hidden; border-radius: 16px; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 36px; text-align: center; }
-    .card-front { background: linear-gradient(145deg, #12243e, #1a3158); border: 1px solid #2a4a6e; }
-    .card-back { background: linear-gradient(145deg, #0d3a2e, #164a3a); border: 1px solid #2a6e5a; transform: rotateY(180deg); }
-    .card-label { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #4a9eff; margin-bottom: 16px; }
-    .card-back .card-label { color: #4ae0b0; }
-    .card-text { font-size: 22px; font-weight: 600; line-height: 1.4; }
-    .card-back .card-text { color: #c8f0e0; font-size: 18px; }
-    .card-hint { position: absolute; bottom: 16px; font-size: 12px; color: #4a6a8a; }
-    .card-category { position: absolute; top: 16px; right: 20px; font-size: 11px; color: #3a5a7a; background: #0a1628; padding: 4px 10px; border-radius: 10px; }
-    .nav-row { display: flex; gap: 12px; align-items: center; margin-bottom: 24px; }
-    .nav-btn { width: 48px; height: 48px; border-radius: 50%; border: 1px solid #2a3a52; background: #12243e; color: #7a8ba3; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-    .shuffle-btn { padding: 10px 24px; border-radius: 24px; border: 1px solid #2a3a52; background: #12243e; color: #7a8ba3; font-size: 14px; cursor: pointer; }
-    .mark-row { display: flex; gap: 12px; }
-    .mark-btn { padding: 10px 20px; border-radius: 12px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
-    .mark-btn.know { background: #1a3a2e; color: #4ae0b0; }
-    .mark-btn.study { background: #3a2020; color: #ff7a7a; }
-    .score-row { display: flex; gap: 24px; margin-top: 16px; font-size: 13px; color: #5a7a9a; }
+    .card-face { position: absolute; width: 100%; min-height: 520px; backface-visibility: hidden; border-radius: 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 56px; text-align: center; box-shadow: 0 8px 28px rgba(30, 45, 107, 0.12); }
+    .card-front { background: linear-gradient(150deg, #ffffff 0%, #eef4ff 100%); border: 2px solid var(--ds-blue); }
+    .card-back { background: linear-gradient(150deg, #fff8ec 0%, #ffe8b8 100%); border: 2px solid var(--ds-gold); transform: rotateY(180deg); }
+    .card-label { font-size: 12px; text-transform: uppercase; letter-spacing: 3px; color: var(--ds-blue); margin-bottom: 24px; font-weight: 800; }
+    .card-back .card-label { color: var(--ds-red); }
+    .card-text { font-size: 34px; font-weight: 700; line-height: 1.3; color: var(--ds-navy); }
+    .card-back .card-text { font-size: 24px; color: #3a2a10; font-weight: 600; }
+    .card-hint { position: absolute; bottom: 20px; font-size: 13px; color: var(--ds-text-dim); font-weight: 600; }
+    .card-category { position: absolute; top: 20px; right: 24px; font-size: 12px; color: #fff; background: var(--ds-navy); padding: 5px 12px; border-radius: 12px; font-weight: 700; letter-spacing: 0.5px; }
+    .card-back .card-category { background: var(--ds-red); }
+
+    .nav-row { display: flex; gap: 14px; align-items: center; margin-bottom: 20px; }
+    .nav-btn { width: 52px; height: 52px; border-radius: 50%; border: 2px solid var(--ds-blue); background: var(--ds-surface); color: var(--ds-blue); font-size: 22px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+    .nav-btn:hover { background: var(--ds-blue); color: #fff; }
+    .shuffle-btn { padding: 12px 28px; border-radius: 26px; border: 2px solid var(--ds-gold); background: var(--ds-surface); color: #8a5a10; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+    .shuffle-btn:hover { background: var(--ds-gold); color: #fff; }
+    .mark-row { display: flex; gap: 14px; }
+    .mark-btn { padding: 11px 22px; border-radius: 14px; border: none; font-size: 14px; font-weight: 700; cursor: pointer; transition: transform 0.15s; }
+    .mark-btn:hover { transform: translateY(-1px); }
+    .mark-btn.know { background: var(--ds-green); color: #fff; }
+    .mark-btn.study { background: var(--ds-red); color: #fff; }
+    .score-row { display: flex; gap: 28px; margin-top: 18px; font-size: 14px; color: var(--ds-text-dim); font-weight: 600; }
     .score-row span { display: flex; align-items: center; gap: 6px; }
-    .dot-green { width: 8px; height: 8px; border-radius: 50%; background: #4ae0b0; }
-    .dot-red { width: 8px; height: 8px; border-radius: 50%; background: #ff7a7a; }
-    .quiz-card { width: 100%; max-width: 620px; background: linear-gradient(145deg, #12243e, #1a3158); border: 1px solid #2a4a6e; border-radius: 16px; padding: 36px; margin-bottom: 24px; text-align: center; position: relative; }
-    .quiz-question { font-size: 22px; font-weight: 600; line-height: 1.4; margin-bottom: 24px; }
-    .quiz-textarea { width: 100%; min-height: 80px; padding: 14px 16px; border-radius: 12px; border: 1px solid #2a4a6e; background: #0a1628; color: #e8edf3; font-size: 16px; font-family: inherit; resize: vertical; outline: none; margin-bottom: 20px; display: block; }
-    .submit-btn { padding: 12px 32px; border-radius: 24px; border: none; background: #4a9eff; color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; }
-    .submit-btn:disabled { background: #2a4a6e; cursor: default; }
-    .result-box { width: 100%; max-width: 620px; border-radius: 12px; padding: 20px 24px; margin-bottom: 20px; text-align: left; display: none; }
-    .result-box.correct { background: #0d3a2e; border: 1px solid #2a6e5a; }
-    .result-box.partial { background: #2a2a10; border: 1px solid #6e6a2a; }
-    .result-box.incorrect { background: #3a1a1a; border: 1px solid #6e2a2a; }
-    .result-header { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
-    .result-box.correct .result-header { color: #4ae0b0; }
-    .result-box.partial .result-header { color: #e0d04a; }
-    .result-box.incorrect .result-header { color: #ff7a7a; }
-    .result-label { font-size: 12px; color: #7a8ba3; margin-top: 10px; margin-bottom: 4px; }
-    .result-answer { font-size: 15px; color: #c8f0e0; line-height: 1.5; }
-    .result-yours { font-size: 15px; color: #a0b0c0; line-height: 1.5; font-style: italic; }
-    .quiz-score-panel { width: 100%; max-width: 620px; background: #12243e; border-radius: 16px; border: 1px solid #2a3a52; padding: 28px 32px; margin-bottom: 24px; text-align: center; display: none; }
-    .quiz-pct { font-size: 48px; font-weight: 700; margin-bottom: 4px; color: #4a9eff; }
-    .quiz-score-grid { display: flex; justify-content: center; gap: 32px; margin-bottom: 16px; }
-    .quiz-score-num { font-size: 36px; font-weight: 700; }
-    .quiz-score-num.green { color: #4ae0b0; }
-    .quiz-score-num.yellow { color: #e0d04a; }
-    .quiz-score-num.red { color: #ff7a7a; }
-    .retry-btn { padding: 12px 32px; border-radius: 24px; border: 1px solid #4a9eff; background: transparent; color: #4a9eff; font-size: 15px; font-weight: 600; cursor: pointer; margin: 0 6px; }
+    .dot-green { width: 10px; height: 10px; border-radius: 50%; background: var(--ds-green); }
+    .dot-red { width: 10px; height: 10px; border-radius: 50%; background: var(--ds-red); }
+
+    /* Quiz */
+    .quiz-card { width: 100%; max-width: 860px; background: linear-gradient(150deg, #ffffff 0%, #eef4ff 100%); border: 2px solid var(--ds-blue); border-radius: 20px; padding: 48px; margin-bottom: 24px; text-align: center; position: relative; box-shadow: 0 8px 28px rgba(30, 45, 107, 0.12); min-height: 420px; display: flex; flex-direction: column; justify-content: center; }
+    .quiz-question { font-size: 28px; font-weight: 700; line-height: 1.3; margin-bottom: 28px; color: var(--ds-navy); }
+    .quiz-textarea { width: 100%; min-height: 100px; padding: 16px 18px; border-radius: 12px; border: 2px solid var(--ds-border); background: #fff; color: var(--ds-text); font-size: 17px; font-family: inherit; resize: vertical; outline: none; margin-bottom: 20px; display: block; }
+    .quiz-textarea:focus { border-color: var(--ds-blue); }
+    .submit-btn { padding: 13px 36px; border-radius: 26px; border: none; background: var(--ds-blue); color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+    .submit-btn:hover:not(:disabled) { background: var(--ds-navy); }
+    .submit-btn:disabled { background: var(--ds-border); color: var(--ds-text-dim); cursor: default; }
+    .result-box { width: 100%; max-width: 860px; border-radius: 14px; padding: 20px 24px; margin-bottom: 20px; text-align: left; display: none; }
+    .result-box.correct { background: #e8f5ee; border: 2px solid var(--ds-green); }
+    .result-box.partial { background: #fff4d8; border: 2px solid var(--ds-gold); }
+    .result-box.incorrect { background: #fce8e4; border: 2px solid var(--ds-red); }
+    .result-header { font-size: 17px; font-weight: 800; margin-bottom: 8px; }
+    .result-box.correct .result-header { color: var(--ds-green); }
+    .result-box.partial .result-header { color: #8a5a10; }
+    .result-box.incorrect .result-header { color: var(--ds-red); }
+    .result-label { font-size: 12px; color: var(--ds-text-dim); margin-top: 12px; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+    .result-answer { font-size: 16px; color: var(--ds-navy); line-height: 1.5; font-weight: 500; }
+    .result-yours { font-size: 16px; color: var(--ds-text-dim); line-height: 1.5; font-style: italic; }
+    .quiz-score-panel { width: 100%; max-width: 860px; background: var(--ds-surface); border-radius: 20px; border: 2px solid var(--ds-blue); padding: 36px 40px; margin-bottom: 24px; text-align: center; display: none; box-shadow: 0 8px 28px rgba(30, 45, 107, 0.12); }
+    .quiz-pct { font-size: 56px; font-weight: 800; margin-bottom: 4px; color: var(--ds-blue); }
+    .quiz-score-grid { display: flex; justify-content: center; gap: 40px; margin-bottom: 20px; }
+    .quiz-score-num { font-size: 40px; font-weight: 800; }
+    .quiz-score-num.green { color: var(--ds-green); }
+    .quiz-score-num.red { color: var(--ds-red); }
+    .retry-btn { padding: 12px 32px; border-radius: 26px; border: 2px solid var(--ds-blue); background: transparent; color: var(--ds-blue); font-size: 15px; font-weight: 700; cursor: pointer; margin: 0 6px; transition: all 0.2s; }
+    .retry-btn:hover { background: var(--ds-blue); color: #fff; }
     .hidden { display: none !important; }
+
+    /* Points of Sail diagram */
+    .diagram-intro { max-width: 820px; text-align: center; font-size: 15px; color: var(--ds-text-dim); margin-bottom: 18px; line-height: 1.5; }
+    .diagram-stage { position: relative; width: 680px; max-width: 100%; aspect-ratio: 1; margin-bottom: 20px; background: linear-gradient(180deg, #eaf4ff 0%, #f5f7fb 100%); border-radius: 24px; border: 2px solid var(--ds-border); box-shadow: 0 8px 24px rgba(30, 45, 107, 0.08); }
+    .wind-indicator { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; color: var(--ds-navy); font-weight: 800; font-size: 16px; letter-spacing: 1px; }
+    .wind-indicator svg { display: block; }
+    .diagram-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; font-weight: 800; color: var(--ds-navy); font-size: 26px; line-height: 1.15; pointer-events: none; }
+    .diagram-center .small { display: block; font-size: 13px; font-weight: 600; color: var(--ds-text-dim); letter-spacing: 2px; text-transform: uppercase; margin-top: 6px; }
+    .boat-slot { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 6px; width: 120px; }
+    .boat-icon { width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; }
+    .drop-zone { width: 108px; min-height: 38px; border: 2px dashed var(--ds-blue-light); background: rgba(255, 255, 255, 0.85); border-radius: 10px; font-size: 12px; font-weight: 700; color: var(--ds-text-dim); display: flex; align-items: center; justify-content: center; text-align: center; padding: 4px 6px; cursor: pointer; transition: all 0.15s; }
+    .drop-zone.drag-over { border-color: var(--ds-gold); background: #fff4d8; border-style: solid; }
+    .drop-zone.filled { border-style: solid; border-color: var(--ds-blue); background: #fff; color: var(--ds-navy); }
+    .drop-zone.correct { border-color: var(--ds-green); background: #e8f5ee; color: var(--ds-green); }
+    .drop-zone.wrong { border-color: var(--ds-red); background: #fce8e4; color: var(--ds-red); }
+    .diagram-controls { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; justify-content: center; }
+    .check-btn { padding: 12px 32px; border-radius: 26px; border: none; background: var(--ds-green); color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+    .check-btn:hover { background: #1f6343; }
+    .reset-btn { padding: 12px 28px; border-radius: 26px; border: 2px solid var(--ds-text-dim); background: var(--ds-surface); color: var(--ds-text-dim); font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+    .reset-btn:hover { border-color: var(--ds-navy); color: var(--ds-navy); }
+    .diagram-score { font-size: 15px; font-weight: 700; color: var(--ds-navy); min-width: 120px; text-align: center; }
+    .diagram-score.all-correct { color: var(--ds-green); }
+    .palette { width: 100%; max-width: 820px; background: var(--ds-surface); border: 2px solid var(--ds-border); border-radius: 16px; padding: 16px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; min-height: 70px; }
+    .chip { padding: 10px 16px; background: var(--ds-blue); color: #fff; border-radius: 22px; font-size: 14px; font-weight: 700; cursor: grab; user-select: none; box-shadow: 0 2px 6px rgba(43, 92, 184, 0.25); transition: transform 0.15s; }
+    .chip:hover { transform: translateY(-1px); }
+    .chip.dragging { opacity: 0.4; }
+    .chip.used { display: none; }
+
+    @media (max-width: 720px) {
+      .diagram-stage { width: 100%; }
+      .boat-slot { width: 90px; }
+      .drop-zone { width: 86px; font-size: 11px; }
+      .diagram-center { font-size: 20px; }
+      .card-text { font-size: 26px; }
+      .card-back .card-text { font-size: 18px; }
+      .card-face { padding: 32px; }
+    }
   </style>
 </head>
 <body>
-  <h1>Sailing Flash Cards</h1>
-  <p class="subtitle">Executive Leadership 1 | Week 5 &middot; 57 cards</p>
-  <div class="mode-toggle">
-    <button class="mode-btn active" id="studyModeBtn" onclick="setMode('study')">Study Mode</button>
-    <button class="mode-btn" id="quizModeBtn" onclick="setMode('quiz')">Quiz Mode</button>
+  <div class="brand-row">
+    <svg class="brand-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-label="Dock Stars logo">
+      <polygon points="50,8 62,40 96,40 68,60 78,92 50,72 22,92 32,60 4,40 38,40" fill="#f5a623"/>
+      <path d="M 20 30 Q 50 10 80 30 L 80 38 Q 50 18 20 38 Z" fill="#d94026"/>
+      <path d="M 16 42 Q 50 22 84 42 L 84 52 Q 50 32 16 52 Z" fill="#1e2d6b"/>
+      <polygon points="82,18 86,26 94,28 86,30 82,38 78,30 70,28 78,26" fill="#2a8056"/>
+    </svg>
+    <div class="brand-title">
+      <h1>DOCK <span class="accent">STARS</span></h1>
+      <div style="font-size:13px;color:var(--ds-blue);font-weight:700;letter-spacing:2px;text-transform:uppercase;">Sailing Flash Cards</div>
+    </div>
   </div>
+  <p class="subtitle">Executive Leadership 1 | Week 5 &middot; 57 cards &middot; Study, Quiz &amp; Diagram</p>
+
+  <div class="mode-toggle">
+    <button class="mode-btn active" id="studyModeBtn" onclick="setMode('study')">Study</button>
+    <button class="mode-btn" id="quizModeBtn" onclick="setMode('quiz')">Quiz</button>
+    <button class="mode-btn" id="diagramModeBtn" onclick="setMode('diagram')">Diagram</button>
+  </div>
+
   <div class="category-bar" id="catBar"></div>
-  <div class="progress-row">
+
+  <div class="progress-row" id="progressRow">
     <span id="counter">1 / 57</span>
     <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
   </div>
+
   <div id="studyArea">
     <div class="card-container" id="cardContainer" onclick="flipCard()">
       <div class="card" id="card">
@@ -87,19 +169,20 @@
           <div class="card-category" id="cardCat"></div>
           <div class="card-label">Term / Question</div>
           <div class="card-text" id="frontText"></div>
-          <div class="card-hint">tap to flip</div>
+          <div class="card-hint">tap card to flip</div>
         </div>
         <div class="card-face card-back">
+          <div class="card-category" id="cardCatBack"></div>
           <div class="card-label">Answer</div>
           <div class="card-text" id="backText"></div>
-          <div class="card-hint">tap to flip back</div>
+          <div class="card-hint">tap card to flip back</div>
         </div>
       </div>
     </div>
     <div class="nav-row">
-      <button class="nav-btn" onclick="prevCard()">&larr;</button>
+      <button class="nav-btn" onclick="prevCard()" aria-label="Previous card">&larr;</button>
       <button class="shuffle-btn" onclick="shuffleDeck()">Shuffle</button>
-      <button class="nav-btn" onclick="nextCard()">&rarr;</button>
+      <button class="nav-btn" onclick="nextCard()" aria-label="Next card">&rarr;</button>
     </div>
     <div class="mark-row">
       <button class="mark-btn know" onclick="markCard('know')">Got it</button>
@@ -110,25 +193,26 @@
       <span><div class="dot-red"></div><span id="studyCount">0</span> to review</span>
     </div>
   </div>
+
   <div id="quizArea" class="hidden">
     <div class="quiz-card">
-      <div class="card-category" id="quizCat" style="position:static;display:inline-block;margin-bottom:16px;"></div>
-      <div class="card-label">Question</div>
+      <div class="card-category" id="quizCat" style="position:static;display:inline-block;margin-bottom:16px;background:var(--ds-navy);"></div>
+      <div class="card-label" style="color:var(--ds-blue);">Question</div>
       <div class="quiz-question" id="quizQuestion"></div>
       <textarea class="quiz-textarea" id="quizInput" placeholder="Type your answer..."></textarea>
       <button class="submit-btn" id="submitBtn" onclick="submitAnswer()">Check Answer</button>
     </div>
     <div class="result-box" id="resultBox">
       <div class="result-header" id="resultHeader"></div>
-      <div class="result-label">Your answer:</div>
+      <div class="result-label">Your answer</div>
       <div class="result-yours" id="resultYours"></div>
-      <div class="result-label">Correct answer:</div>
+      <div class="result-label">Correct answer</div>
       <div class="result-answer" id="resultAnswer"></div>
     </div>
     <div class="nav-row">
-      <button class="nav-btn" onclick="prevQuiz()">&larr;</button>
+      <button class="nav-btn" onclick="prevQuiz()" aria-label="Previous question">&larr;</button>
       <button class="shuffle-btn" onclick="shuffleDeck()">Shuffle</button>
-      <button class="nav-btn" onclick="nextQuiz()">&rarr;</button>
+      <button class="nav-btn" onclick="nextQuiz()" aria-label="Next question">&rarr;</button>
     </div>
     <div class="score-row">
       <span><div class="dot-green"></div><span id="qCorrect">0</span> correct</span>
@@ -136,21 +220,48 @@
       <span><span id="qAnswered">0</span> / <span id="qTotal">57</span> answered</span>
     </div>
     <div class="quiz-score-panel" id="quizScorePanel">
-      <div style="font-size:20px;font-weight:700;margin-bottom:16px;">Quiz Complete!</div>
+      <div style="font-size:22px;font-weight:800;margin-bottom:14px;color:var(--ds-navy);">Quiz Complete!</div>
       <div class="quiz-pct" id="quizPct">0%</div>
-      <div style="font-size:14px;color:#7a8ba3;margin-bottom:20px;">overall score</div>
+      <div style="font-size:14px;color:var(--ds-text-dim);margin-bottom:20px;font-weight:600;">overall score</div>
       <div class="quiz-score-grid">
-        <div style="display:flex;flex-direction:column;align-items:center;"><div class="quiz-score-num green" id="finalCorrect">0</div><div style="font-size:12px;color:#5a7a9a;margin-top:4px;">Correct</div></div>
-        <div style="display:flex;flex-direction:column;align-items:center;"><div class="quiz-score-num red" id="finalWrong">0</div><div style="font-size:12px;color:#5a7a9a;margin-top:4px;">Missed</div></div>
+        <div style="display:flex;flex-direction:column;align-items:center;"><div class="quiz-score-num green" id="finalCorrect">0</div><div style="font-size:12px;color:var(--ds-text-dim);margin-top:4px;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Correct</div></div>
+        <div style="display:flex;flex-direction:column;align-items:center;"><div class="quiz-score-num red" id="finalWrong">0</div><div style="font-size:12px;color:var(--ds-text-dim);margin-top:4px;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Missed</div></div>
       </div>
       <button class="retry-btn" onclick="retryAll()">Retry All</button>
       <button class="retry-btn" onclick="retryMissed()">Retry Missed</button>
     </div>
   </div>
-  <script src="cards.js?v=2"></script>
+
+  <div id="diagramArea" class="hidden">
+    <p class="diagram-intro">Drag each <strong>Point of Sail</strong> label onto the correct boat position around the compass. Wind blows from the top. When you're ready, hit <strong>Check</strong>.</p>
+    <div class="diagram-stage" id="diagramStage">
+      <div class="wind-indicator">
+        <svg width="36" height="44" viewBox="0 0 36 44">
+          <line x1="11" y1="2" x2="11" y2="30" stroke="#1e2d6b" stroke-width="3"/>
+          <polygon points="6,26 16,26 11,36" fill="#1e2d6b"/>
+          <line x1="25" y1="2" x2="25" y2="30" stroke="#1e2d6b" stroke-width="3"/>
+          <polygon points="20,26 30,26 25,36" fill="#1e2d6b"/>
+        </svg>
+        <div style="margin-top:2px;">WIND</div>
+      </div>
+      <div class="diagram-center">
+        Points<br>of<br>Sail
+        <span class="small">Dock Stars</span>
+      </div>
+    </div>
+    <div class="diagram-controls">
+      <button class="check-btn" onclick="checkDiagram()">Check</button>
+      <button class="reset-btn" onclick="resetDiagram()">Reset</button>
+      <div class="diagram-score" id="diagramScore">0 / 11 placed</div>
+    </div>
+    <div class="palette" id="palette"></div>
+  </div>
+
+  <script src="cards.js?v=3"></script>
   <script>
     renderCatBar();
     showStudyCard();
+    renderDiagram();
   </script>
 </body>
 </html>
