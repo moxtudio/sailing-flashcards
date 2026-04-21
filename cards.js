@@ -611,12 +611,12 @@ function resetDiagram() {
 }
 
 const knotPositions = [
-  { id: "k1", x: 30, y: 22, label: "Figure 8" },
-  { id: "k2", x: 72, y: 22, label: "Bowline" },
-  { id: "k3", x: 17, y: 52, label: "Clove Hitch" },
-  { id: "k4", x: 50, y: 52, label: "Cleat Hitch" },
-  { id: "k5", x: 83, y: 52, label: "Round Turn & Two Half Hitches" },
-  { id: "k6", x: 50, y: 84, label: "Square Knot" }
+  { id: "k1", x: 30, y: 22, label: "Figure 8",                        image: "knots/figure-8.png" },
+  { id: "k2", x: 72, y: 22, label: "Bowline",                         image: "knots/bowline.png" },
+  { id: "k3", x: 17, y: 52, label: "Clove Hitch",                     image: "knots/clove-hitch.png" },
+  { id: "k4", x: 50, y: 52, label: "Cleat Hitch",                     image: "knots/cleat-hitch.png" },
+  { id: "k5", x: 83, y: 52, label: "Round Turn & Two Half Hitches",   image: "knots/round-turn.png" },
+  { id: "k6", x: 50, y: 84, label: "Square Knot",                     image: "knots/reef.png" }
 ];
 
 let knotState = {};
@@ -656,8 +656,12 @@ function renderKnots() {
     slot.className = "knot-slot";
     slot.style.left = pos.x + "%";
     slot.style.top = pos.y + "%";
+    const fallback = knotIconSvg(pos.label);
+    const img = pos.image
+      ? `<img src="${pos.image}" alt="" class="knot-img" draggable="false" onerror="this.replaceWith(Object.assign(document.createElement('span'),{innerHTML:this.dataset.fallback}).firstChild)" data-fallback='${fallback.replace(/'/g, "&apos;")}'>`
+      : fallback;
     slot.innerHTML = `
-      <div class="knot-icon">${knotIconSvg(pos.label)}</div>
+      <div class="knot-icon">${img}</div>
       <div class="drop-zone knot-drop" data-knot-zone="${pos.id}" data-expected="${pos.label}">drop here</div>
     `;
     stage.appendChild(slot);
