@@ -286,6 +286,7 @@
     }
     .animated-knots-btn:hover { background: var(--ds-gold); color: #fff; }
     .animated-knots-btn svg { width: 14px; height: 14px; }
+    #knotArea .animated-knots-btn { margin-top: 0; margin-bottom: 14px; }
     .knot-drop {
       width: 150px;
       min-height: 44px;
@@ -455,6 +456,10 @@
 
   <div id="knotArea" class="hidden">
     <p class="diagram-intro">Drag each <strong>knot name</strong> onto the knot it belongs to. Six knots, six chips. Hit <strong>Check</strong> when you're done.</p>
+    <a class="animated-knots-btn" href="https://www.animatedknots.com/" target="_blank" rel="noopener noreferrer">
+      Learn these knots at AnimatedKnots.com
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h7v7"/><path d="M13 3L5 11"/><path d="M3 5v8h8"/></svg>
+    </a>
     <div class="knot-stage" id="knotStage"></div>
     <div class="diagram-controls">
       <button class="check-btn" onclick="checkKnots()">Check</button>
@@ -462,10 +467,6 @@
       <div class="diagram-score" id="knotScore">0 / 6 placed</div>
     </div>
     <div class="palette" id="knotPalette"></div>
-    <a class="animated-knots-btn" href="https://www.animatedknots.com/" target="_blank" rel="noopener noreferrer">
-      Learn these knots at AnimatedKnots.com
-      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h7v7"/><path d="M13 3L5 11"/><path d="M3 5v8h8"/></svg>
-    </a>
   </div>
 
   <script src="cards.js?v=8"></script>
