@@ -134,6 +134,7 @@ function persistMark(card) {
   else delete state.status[card.front];
   saveUserState(currentUser, state);
   renderUserBar();
+  renderCatBar();
 }
 
 function persistQuiz(card, entry) {
@@ -154,12 +155,21 @@ function persistDiagram(result) {
 
 function renderCatBar() {
   const bar = document.getElementById("catBar");
-  const cats = ["All", ...Array.from(new Set(allCards.map(c => c.category)))];
+  if (!bar) return;
+  const state = loadUserState(currentUser);
+  const reviewCount = Object.values(state.status).filter(s => s === "study").length;
+  const categories = Array.from(new Set(allCards.map(c => c.category)));
+  const cats = ["All", "To Review", ...categories];
   bar.innerHTML = "";
   cats.forEach(cat => {
     const btn = document.createElement("button");
-    btn.className = "cat-btn" + (cat === currentCat ? " active" : "");
-    btn.textContent = cat;
+    const isReview = cat === "To Review";
+    btn.className = "cat-btn" + (cat === currentCat ? " active" : "") + (isReview ? " cat-btn-review" : "");
+    if (isReview) {
+      btn.innerHTML = `<span class="review-dot"></span>To Review <span class="review-count">${reviewCount}</span>`;
+    } else {
+      btn.textContent = cat;
+    }
     btn.onclick = () => {
       currentCat = cat;
       filterDeck();
@@ -172,9 +182,14 @@ function renderCatBar() {
 
 function filterDeck() {
   const state = loadUserState(currentUser);
-  const source = currentCat === "All"
-    ? allCards
-    : allCards.filter(c => c.category === currentCat);
+  let source;
+  if (currentCat === "All") {
+    source = allCards;
+  } else if (currentCat === "To Review") {
+    source = allCards.filter(c => state.status[c.front] === "study");
+  } else {
+    source = allCards.filter(c => c.category === currentCat);
+  }
   deck = source.map(c => ({ ...c, status: state.status[c.front] || null }));
   studyIdx = 0;
   quizIdx = 0;
@@ -241,11 +256,18 @@ function updateView() {
 
 function showStudyCard() {
   if (deck.length === 0) {
-    document.getElementById("frontText").textContent = "No cards in this category.";
-    document.getElementById("backText").textContent = "";
+    const isReview = currentCat === "To Review";
+    document.getElementById("frontText").textContent = isReview
+      ? "All clear! Nothing left to review."
+      : "No cards in this category.";
+    document.getElementById("backText").textContent = isReview
+      ? "Switch to All or another category to keep studying."
+      : "";
     document.getElementById("cardCat").textContent = "";
     document.getElementById("card").classList.remove("flipped");
+    setStatusBadge(null);
     updateMarkCounts();
+    updateCounter();
     return;
   }
   const card = deck[studyIdx];
@@ -256,8 +278,22 @@ function showStudyCard() {
   if (backCat) backCat.textContent = card.category;
   const cardEl = document.getElementById("card");
   if (flipped) cardEl.classList.add("flipped"); else cardEl.classList.remove("flipped");
+  setStatusBadge(card.status);
   updateMarkCounts();
   updateCounter();
+}
+
+function setStatusBadge(status) {
+  const front = document.getElementById("cardStatusBadge");
+  const back = document.getElementById("cardStatusBadgeBack");
+  const label = status === "know" ? "Got it" : status === "study" ? "Study more" : "";
+  const cls = "card-status-badge" + (status ? " " + status : "");
+  [front, back].forEach(el => {
+    if (!el) return;
+    el.textContent = label;
+    el.className = cls;
+    el.style.display = status ? "inline-block" : "none";
+  });
 }
 
 function updateMarkCounts() {
@@ -265,6 +301,20 @@ function updateMarkCounts() {
   const toStudy = deck.filter(c => c.status === "study").length;
   document.getElementById("knowCount").textContent = known;
   document.getElementById("studyCount").textContent = toStudy;
+  const state = loadUserState(currentUser);
+  const totalKnown = Object.values(state.status).filter(s => s === "know").length;
+  const totalReview = Object.values(state.status).filter(s => s === "study").length;
+  const totalNew = allCards.length - totalKnown - totalReview;
+  const summary = document.getElementById("topSummary");
+  if (summary) {
+    if (currentUser) {
+      summary.innerHTML = `<strong>${currentUser}</strong> &middot; <span class="sum-known">${totalKnown} known</span> &middot; <span class="sum-review">${totalReview} to review</span> &middot; <span class="sum-new">${totalNew} new</span>`;
+      summary.style.display = "flex";
+    } else {
+      summary.innerHTML = `<span class="sum-new">Pick a profile above to save your progress.</span>`;
+      summary.style.display = "flex";
+    }
+  }
 }
 
 function flipCard() {
@@ -292,12 +342,15 @@ function markCard(status) {
   if (deck.length === 0) return;
   deck[studyIdx].status = status;
   persistMark(deck[studyIdx]);
+  renderCatBar();
   updateMarkCounts();
   if (studyIdx < deck.length - 1) {
     studyIdx++;
     flipped = false;
     showStudyCard();
     updateCounter();
+  } else {
+    setStatusBadge(deck[studyIdx].status);
   }
 }
 
@@ -611,12 +664,12 @@ function resetDiagram() {
 }
 
 const knotPositions = [
-  { id: "k1", x: 30, y: 22, label: "Figure 8",                        image: "knots/figure-8.png" },
-  { id: "k2", x: 72, y: 22, label: "Bowline",                         image: "knots/bowline.png" },
-  { id: "k3", x: 17, y: 52, label: "Clove Hitch",                     image: "knots/clove-hitch.png" },
-  { id: "k4", x: 50, y: 52, label: "Cleat Hitch",                     image: "knots/cleat-hitch.png" },
-  { id: "k5", x: 83, y: 52, label: "Round Turn & Two Half Hitches",   image: "knots/round-turn.png" },
-  { id: "k6", x: 50, y: 84, label: "Square Knot",                     image: "knots/reef.png" }
+  { id: "k1", x: 30, y: 22, label: "Figure 8",                        image: "knots/figure-8.png",     url: "https://www.animatedknots.com/figure-8-knot" },
+  { id: "k2", x: 72, y: 22, label: "Bowline",                         image: "knots/bowline.png",      url: "https://www.animatedknots.com/bowline-knot" },
+  { id: "k3", x: 17, y: 52, label: "Clove Hitch",                     image: "knots/clove-hitch.png",  url: "https://www.animatedknots.com/clove-hitch-knot-end" },
+  { id: "k4", x: 50, y: 52, label: "Cleat Hitch",                     image: "knots/cleat-hitch.png",  url: "https://www.animatedknots.com/cleat-hitch-knot" },
+  { id: "k5", x: 83, y: 52, label: "Round Turn & Two Half Hitches",   image: "knots/round-turn.png",   url: "https://www.animatedknots.com/round-turn-two-half-hitches" },
+  { id: "k6", x: 50, y: 84, label: "Square Knot",                     image: "knots/reef.png",         url: "https://www.animatedknots.com/square-knot" }
 ];
 
 let knotState = {};
@@ -663,6 +716,7 @@ function renderKnots() {
     slot.innerHTML = `
       <div class="knot-icon">${img}</div>
       <div class="drop-zone knot-drop" data-knot-zone="${pos.id}" data-expected="${pos.label}">drop here</div>
+      <a class="knot-learn" href="${pos.url}" target="_blank" rel="noopener noreferrer" data-knot-learn="${pos.id}" style="display:none;">&#9654; Learn this knot</a>
     `;
     stage.appendChild(slot);
   });
@@ -760,19 +814,26 @@ function checkKnots() {
   knotPositions.forEach(pos => {
     const chipId = knotState[pos.id];
     const zone = knotZoneEl(pos.id);
-    if (!chipId) {
-      zone.classList.remove("correct", "wrong");
-      return;
-    }
-    const chip = knotChip(chipId);
-    const label = chip ? chip.dataset.label : "";
-    if (label === pos.label) {
-      zone.classList.add("correct");
-      zone.classList.remove("wrong");
-      correct++;
+    const learn = document.querySelector(`.knot-learn[data-knot-learn="${pos.id}"]`);
+    let isCorrect = false;
+    if (chipId) {
+      const chip = knotChip(chipId);
+      const label = chip ? chip.dataset.label : "";
+      if (label === pos.label) {
+        zone.classList.add("correct");
+        zone.classList.remove("wrong");
+        correct++;
+        isCorrect = true;
+      } else {
+        zone.classList.add("wrong");
+        zone.classList.remove("correct");
+      }
     } else {
-      zone.classList.add("wrong");
-      zone.classList.remove("correct");
+      zone.classList.remove("correct", "wrong");
+    }
+    if (learn) {
+      learn.style.display = "inline-block";
+      learn.classList.toggle("knot-learn-review", !isCorrect);
     }
   });
   const el = document.getElementById("knotScore");

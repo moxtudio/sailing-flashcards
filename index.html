@@ -42,6 +42,88 @@
     .cat-btn { padding: 8px 16px; border-radius: 20px; border: 1px solid var(--ds-border); background: var(--ds-surface); color: var(--ds-text-dim); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
     .cat-btn:hover { border-color: var(--ds-blue); color: var(--ds-blue); }
     .cat-btn.active { background: var(--ds-navy); color: #fff; border-color: var(--ds-navy); }
+    .top-summary {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      color: var(--ds-text-dim);
+      font-weight: 700;
+      background: var(--ds-surface);
+      border: 1px solid var(--ds-border);
+      border-radius: 24px;
+      padding: 8px 18px;
+      margin-bottom: 14px;
+      max-width: 900px;
+      box-shadow: 0 2px 6px rgba(30, 45, 107, 0.05);
+    }
+    .top-summary strong { color: var(--ds-navy); }
+    .sum-known { color: var(--ds-green); }
+    .sum-review { color: var(--ds-red); }
+    .sum-new { color: var(--ds-text-dim); }
+    .cat-btn-review {
+      border-color: var(--ds-red);
+      color: var(--ds-red);
+    }
+    .cat-btn-review:hover { background: #fce8e4; border-color: var(--ds-red); color: var(--ds-red); }
+    .cat-btn-review.active { background: var(--ds-red); color: #fff; border-color: var(--ds-red); }
+    .review-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--ds-red);
+      display: inline-block;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+    .cat-btn-review.active .review-dot { background: #fff; }
+    .review-count {
+      background: rgba(217, 64, 38, 0.15);
+      color: var(--ds-red);
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 10px;
+      margin-left: 6px;
+      font-weight: 800;
+    }
+    .cat-btn-review.active .review-count { background: rgba(255, 255, 255, 0.25); color: #fff; }
+    .card-status-badge {
+      position: absolute;
+      top: 20px;
+      left: 24px;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 5px 12px;
+      border-radius: 12px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .card-status-badge.know { background: var(--ds-green); color: #fff; }
+    .card-status-badge.study { background: var(--ds-red); color: #fff; }
+    .knot-learn {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--ds-blue);
+      text-decoration: none;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 4px 10px;
+      border-radius: 10px;
+      border: 1px solid var(--ds-blue);
+      margin-top: 4px;
+      white-space: nowrap;
+    }
+    .knot-learn:hover { background: var(--ds-blue); color: #fff; }
+    .knot-learn.knot-learn-review {
+      border-color: var(--ds-red);
+      color: var(--ds-red);
+      background: #fff5f2;
+      animation: pulse-review 1.6s ease-in-out 0s 2;
+    }
+    .knot-learn.knot-learn-review:hover { background: var(--ds-red); color: #fff; }
+    @keyframes pulse-review {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(217, 64, 38, 0.0); }
+      50% { box-shadow: 0 0 0 6px rgba(217, 64, 38, 0.2); }
+    }
     .progress-row { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; font-size: 14px; color: var(--ds-text-dim); font-weight: 600; }
     .progress-bar { width: 240px; height: 8px; background: var(--ds-surface-2); border-radius: 4px; overflow: hidden; border: 1px solid var(--ds-border); }
     .progress-fill { height: 100%; background: linear-gradient(90deg, var(--ds-blue), var(--ds-gold)); border-radius: 4px; transition: width 0.4s ease; width: 0%; }
@@ -267,6 +349,8 @@
 
   <div class="category-bar" id="catBar"></div>
 
+  <div class="top-summary" id="topSummary"></div>
+
   <div class="progress-row" id="progressRow">
     <span id="counter">1 / 60</span>
     <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
@@ -276,12 +360,14 @@
     <div class="card-container" id="cardContainer" onclick="flipCard()">
       <div class="card" id="card">
         <div class="card-face card-front">
+          <div class="card-status-badge" id="cardStatusBadge" style="display:none;"></div>
           <div class="card-category" id="cardCat"></div>
           <div class="card-label">Term / Question</div>
           <div class="card-text" id="frontText"></div>
           <div class="card-hint">tap card to flip</div>
         </div>
         <div class="card-face card-back">
+          <div class="card-status-badge" id="cardStatusBadgeBack" style="display:none;"></div>
           <div class="card-category" id="cardCatBack"></div>
           <div class="card-label">Answer</div>
           <div class="card-text" id="backText"></div>
@@ -382,7 +468,7 @@
     </a>
   </div>
 
-  <script src="cards.js?v=7"></script>
+  <script src="cards.js?v=8"></script>
   <script>
     currentUser = localStorage.getItem("dockstars:currentUser");
     renderUserBar();
