@@ -127,8 +127,16 @@ function setMode(m) {
   mode = m;
   document.getElementById("studyModeBtn").classList.toggle("active", m === "study");
   document.getElementById("quizModeBtn").classList.toggle("active", m === "quiz");
+  const diagramBtn = document.getElementById("diagramModeBtn");
+  if (diagramBtn) diagramBtn.classList.toggle("active", m === "diagram");
   document.getElementById("studyArea").classList.toggle("hidden", m !== "study");
   document.getElementById("quizArea").classList.toggle("hidden", m !== "quiz");
+  const diagramArea = document.getElementById("diagramArea");
+  if (diagramArea) diagramArea.classList.toggle("hidden", m !== "diagram");
+  const progressRow = document.getElementById("progressRow");
+  const catBar = document.getElementById("catBar");
+  if (progressRow) progressRow.style.display = m === "diagram" ? "none" : "";
+  if (catBar) catBar.style.display = m === "diagram" ? "none" : "";
   flipped = false;
   updateView();
 }
@@ -136,12 +144,13 @@ function setMode(m) {
 function updateView() {
   if (mode === "study") {
     showStudyCard();
-  } else {
+    updateCounter();
+  } else if (mode === "quiz") {
     document.getElementById("quizScorePanel").style.display = "none";
     document.querySelector(".quiz-card").style.display = "block";
     showQuizCard();
+    updateCounter();
   }
-  updateCounter();
 }
 
 function showStudyCard() {
@@ -157,6 +166,8 @@ function showStudyCard() {
   document.getElementById("frontText").textContent = card.front;
   document.getElementById("backText").textContent = card.back;
   document.getElementById("cardCat").textContent = card.category;
+  const backCat = document.getElementById("cardCatBack");
+  if (backCat) backCat.textContent = card.category;
   const cardEl = document.getElementById("card");
   if (flipped) cardEl.classList.add("flipped"); else cardEl.classList.remove("flipped");
   updateMarkCounts();
@@ -342,3 +353,169 @@ function retryMissed() {
   updateCounter();
 }
 
+const diagramPositions = [
+  { id: "p1",  angle: 0,    label: "In Irons",     tilt: 0 },
+  { id: "p2",  angle: -30,  label: "Close Hauled", tilt: -30 },
+  { id: "p3",  angle: 30,   label: "Close Hauled", tilt: 30 },
+  { id: "p4",  angle: -60,  label: "Close Reach",  tilt: -60 },
+  { id: "p5",  angle: 60,   label: "Close Reach",  tilt: 60 },
+  { id: "p6",  angle: -90,  label: "Beam Reach",   tilt: -90 },
+  { id: "p7",  angle: 90,   label: "Beam Reach",   tilt: 90 },
+  { id: "p8",  angle: -135, label: "Broad Reach",  tilt: -135 },
+  { id: "p9",  angle: 135,  label: "Broad Reach",  tilt: 135 },
+  { id: "p10", angle: -165, label: "Running",      tilt: 180 },
+  { id: "p11", angle: 165,  label: "Running",      tilt: 180 }
+];
+
+let diagramState = {};
+
+function boatSvg(tiltDeg) {
+  return `
+    <svg width="52" height="52" viewBox="-26 -26 52 52" style="transform: rotate(${tiltDeg}deg);">
+      <ellipse cx="0" cy="8" rx="18" ry="7" fill="#4ad0e8" stroke="#1e2d6b" stroke-width="1.5"/>
+      <polygon points="-2,8 -2,-14 12,6" fill="#cfd7e8" stroke="#1e2d6b" stroke-width="1.2"/>
+      <line x1="0" y1="8" x2="0" y2="-16" stroke="#5a3a1a" stroke-width="1.5"/>
+    </svg>`;
+}
+
+function renderDiagram() {
+  const stage = document.getElementById("diagramStage");
+  const palette = document.getElementById("palette");
+  if (!stage || !palette) return;
+
+  stage.querySelectorAll(".boat-slot").forEach(el => el.remove());
+  diagramState = {};
+
+  diagramPositions.forEach(pos => {
+    const rad = (pos.angle * Math.PI) / 180;
+    const xPct = 50 + 38 * Math.sin(rad);
+    const yPct = 50 - 38 * Math.cos(rad);
+    const slot = document.createElement("div");
+    slot.className = "boat-slot";
+    slot.style.left = xPct + "%";
+    slot.style.top = yPct + "%";
+    slot.innerHTML = `
+      <div class="boat-icon">${boatSvg(pos.tilt)}</div>
+      <div class="drop-zone" data-zone="${pos.id}" data-expected="${pos.label}">drop here</div>
+    `;
+    stage.appendChild(slot);
+  });
+
+  stage.querySelectorAll(".drop-zone").forEach(zone => {
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      const chipId = e.dataTransfer.getData("text/plain");
+      if (!chipId) return;
+      dropChipOnZone(chipId, zone.dataset.zone);
+    });
+    zone.addEventListener("click", () => {
+      if (zone.classList.contains("filled")) clearZone(zone.dataset.zone);
+    });
+  });
+
+  const chips = [];
+  const counts = {};
+  diagramPositions.forEach(p => { counts[p.label] = (counts[p.label] || 0) + 1; });
+  Object.entries(counts).forEach(([label, count]) => {
+    for (let i = 0; i < count; i++) {
+      chips.push({ id: `chip-${label.replace(/\s+/g, "-").toLowerCase()}-${i}`, label });
+    }
+  });
+  for (let i = chips.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [chips[i], chips[j]] = [chips[j], chips[i]];
+  }
+
+  palette.innerHTML = "";
+  chips.forEach(chip => {
+    const el = document.createElement("div");
+    el.className = "chip";
+    el.draggable = true;
+    el.textContent = chip.label;
+    el.dataset.chipId = chip.id;
+    el.dataset.label = chip.label;
+    el.addEventListener("dragstart", e => {
+      e.dataTransfer.setData("text/plain", chip.id);
+      el.classList.add("dragging");
+    });
+    el.addEventListener("dragend", () => el.classList.remove("dragging"));
+    palette.appendChild(el);
+  });
+
+  updateDiagramScore();
+}
+
+function dropChipOnZone(chipId, zoneId) {
+  const chip = document.querySelector(`.chip[data-chip-id="${chipId}"]`);
+  if (!chip) return;
+  const existing = diagramState[zoneId];
+  if (existing) returnChip(existing);
+  diagramState[zoneId] = chipId;
+  chip.classList.add("used");
+  const zone = document.querySelector(`.drop-zone[data-zone="${zoneId}"]`);
+  zone.textContent = chip.dataset.label;
+  zone.classList.remove("correct", "wrong");
+  zone.classList.add("filled");
+  updateDiagramScore();
+}
+
+function clearZone(zoneId) {
+  const chipId = diagramState[zoneId];
+  if (!chipId) return;
+  returnChip(chipId);
+  delete diagramState[zoneId];
+  const zone = document.querySelector(`.drop-zone[data-zone="${zoneId}"]`);
+  zone.textContent = "drop here";
+  zone.classList.remove("filled", "correct", "wrong");
+  updateDiagramScore();
+}
+
+function returnChip(chipId) {
+  const chip = document.querySelector(`.chip[data-chip-id="${chipId}"]`);
+  if (chip) chip.classList.remove("used");
+}
+
+function updateDiagramScore() {
+  const placed = Object.keys(diagramState).length;
+  const total = diagramPositions.length;
+  const el = document.getElementById("diagramScore");
+  if (el) {
+    el.textContent = `${placed} / ${total} placed`;
+    el.classList.remove("all-correct");
+  }
+}
+
+function checkDiagram() {
+  let correct = 0;
+  diagramPositions.forEach(pos => {
+    const chipId = diagramState[pos.id];
+    const zone = document.querySelector(`.drop-zone[data-zone="${pos.id}"]`);
+    if (!chipId) {
+      zone.classList.remove("correct", "wrong");
+      return;
+    }
+    const chip = document.querySelector(`.chip[data-chip-id="${chipId}"]`);
+    const label = chip ? chip.dataset.label : "";
+    if (label === pos.label) {
+      zone.classList.add("correct");
+      zone.classList.remove("wrong");
+      correct++;
+    } else {
+      zone.classList.add("wrong");
+      zone.classList.remove("correct");
+    }
+  });
+  const el = document.getElementById("diagramScore");
+  const total = diagramPositions.length;
+  if (el) {
+    el.textContent = `${correct} / ${total} correct`;
+    el.classList.toggle("all-correct", correct === total);
+  }
+}
+
+function resetDiagram() {
+  renderDiagram();
+}
