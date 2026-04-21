@@ -76,6 +76,81 @@ let mode = "study";
 let flipped = false;
 let quizAnswers = {};
 
+const TEAM = ["JB", "CV", "CF", "JL", "KF"];
+let currentUser = null;
+
+function userKey(u) { return `dockstars:v1:${u}`; }
+
+function loadUserState(u) {
+  const empty = { status: {}, quiz: {}, diagram: null };
+  if (!u) return empty;
+  try {
+    const raw = localStorage.getItem(userKey(u));
+    if (!raw) return empty;
+    const parsed = JSON.parse(raw);
+    return {
+      status: parsed.status || {},
+      quiz: parsed.quiz || {},
+      diagram: parsed.diagram || null
+    };
+  } catch (e) {
+    return empty;
+  }
+}
+
+function saveUserState(u, state) {
+  if (!u) return;
+  try { localStorage.setItem(userKey(u), JSON.stringify(state)); } catch (e) {}
+}
+
+function setUser(u) {
+  currentUser = u;
+  try { localStorage.setItem("dockstars:currentUser", u); } catch (e) {}
+  renderUserBar();
+  filterDeck();
+  updateView();
+}
+
+function renderUserBar() {
+  const bar = document.getElementById("userButtons");
+  if (!bar) return;
+  bar.innerHTML = "";
+  TEAM.forEach(u => {
+    const state = loadUserState(u);
+    const known = Object.values(state.status).filter(s => s === "know").length;
+    const btn = document.createElement("button");
+    btn.className = "user-btn" + (u === currentUser ? " active" : "");
+    btn.innerHTML = `${u}<span class="count">${known}/${allCards.length}</span>`;
+    btn.onclick = () => setUser(u);
+    bar.appendChild(btn);
+  });
+}
+
+function persistMark(card) {
+  if (!currentUser) return;
+  const state = loadUserState(currentUser);
+  if (card.status) state.status[card.front] = card.status;
+  else delete state.status[card.front];
+  saveUserState(currentUser, state);
+  renderUserBar();
+}
+
+function persistQuiz(card, entry) {
+  if (!currentUser) return;
+  const state = loadUserState(currentUser);
+  state.quiz[card.front] = entry;
+  saveUserState(currentUser, state);
+}
+
+function persistDiagram(result) {
+  if (!currentUser) return;
+  const state = loadUserState(currentUser);
+  if (!state.diagram || result.correct > state.diagram.correct) {
+    state.diagram = { correct: result.correct, total: result.total, ts: Date.now() };
+    saveUserState(currentUser, state);
+  }
+}
+
 function renderCatBar() {
   const bar = document.getElementById("catBar");
   const cats = ["All", ...Array.from(new Set(allCards.map(c => c.category)))];
@@ -95,12 +170,17 @@ function renderCatBar() {
 }
 
 function filterDeck() {
-  deck = currentCat === "All"
-    ? allCards.map(c => ({ ...c, status: null }))
-    : allCards.filter(c => c.category === currentCat).map(c => ({ ...c, status: null }));
+  const state = loadUserState(currentUser);
+  const source = currentCat === "All"
+    ? allCards
+    : allCards.filter(c => c.category === currentCat);
+  deck = source.map(c => ({ ...c, status: state.status[c.front] || null }));
   studyIdx = 0;
   quizIdx = 0;
   quizAnswers = {};
+  deck.forEach((c, idx) => {
+    if (state.quiz[c.front]) quizAnswers[idx] = state.quiz[c.front];
+  });
   flipped = false;
 }
 
@@ -205,6 +285,7 @@ function prevCard() {
 function markCard(status) {
   if (deck.length === 0) return;
   deck[studyIdx].status = status;
+  persistMark(deck[studyIdx]);
   updateMarkCounts();
   if (studyIdx < deck.length - 1) {
     studyIdx++;
@@ -264,7 +345,9 @@ function submitAnswer() {
   if (!user) return;
   const card = deck[quizIdx];
   const grade = gradeAnswer(user, card.back);
-  quizAnswers[quizIdx] = { userAnswer: user, grade };
+  const entry = { userAnswer: user, grade };
+  quizAnswers[quizIdx] = entry;
+  persistQuiz(card, entry);
   input.disabled = true;
   document.getElementById("submitBtn").disabled = true;
   showResult(grade, user, card.back);
@@ -514,6 +597,7 @@ function checkDiagram() {
     el.textContent = `${correct} / ${total} correct`;
     el.classList.toggle("all-correct", correct === total);
   }
+  persistDiagram({ correct, total });
 }
 
 function resetDiagram() {
