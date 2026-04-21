@@ -132,6 +132,60 @@
     .chip.dragging { opacity: 0.4; }
     .chip.used { display: none; }
 
+    /* Knot diagram */
+    .knot-stage {
+      position: relative;
+      width: min(94vw, 920px);
+      aspect-ratio: 16 / 10;
+      margin-bottom: 20px;
+      border-radius: 20px;
+      border: 3px solid #3a2510;
+      overflow: hidden;
+      box-shadow: 0 10px 28px rgba(30, 45, 107, 0.16);
+      background-color: #6d4a2a;
+      background-image:
+        linear-gradient(180deg, rgba(0,0,0,0.0) 0%, rgba(0,0,0,0.25) 100%),
+        repeating-linear-gradient(180deg,
+          #7a5230 0px,
+          #8a5d35 3px,
+          #6d4a2a 6px,
+          #5a3d22 9px,
+          #7a5230 14px),
+        repeating-linear-gradient(90deg,
+          rgba(0,0,0,0.0) 0px,
+          rgba(0,0,0,0.0) 158px,
+          rgba(0,0,0,0.45) 160px,
+          rgba(0,0,0,0.0) 162px);
+    }
+    .knot-slot {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      width: 170px;
+    }
+    .knot-icon {
+      width: 64px;
+      height: 64px;
+      background: rgba(245, 247, 251, 0.92);
+      border-radius: 12px;
+      border: 2px solid #3a2510;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.25);
+    }
+    .knot-drop {
+      width: 150px;
+      min-height: 44px;
+      background: rgba(255, 255, 255, 0.95);
+      font-size: 12px;
+      font-weight: 800;
+      text-align: center;
+      line-height: 1.25;
+    }
     @media (max-width: 720px) {
       .diagram-stage { width: 100%; }
       .boat-slot { width: 90px; }
@@ -140,6 +194,9 @@
       .card-text { font-size: 26px; }
       .card-back .card-text { font-size: 18px; }
       .card-face { padding: 32px; }
+      .knot-slot { width: 120px; }
+      .knot-icon { width: 48px; height: 48px; }
+      .knot-drop { width: 110px; font-size: 10px; }
     }
   </style>
 </head>
@@ -177,7 +234,8 @@
   <div class="mode-toggle">
     <button class="mode-btn active" id="studyModeBtn" onclick="setMode('study')">Study</button>
     <button class="mode-btn" id="quizModeBtn" onclick="setMode('quiz')">Quiz</button>
-    <button class="mode-btn" id="diagramModeBtn" onclick="setMode('diagram')">Diagram</button>
+    <button class="mode-btn" id="diagramModeBtn" onclick="setMode('diagram')">Sail Positions</button>
+    <button class="mode-btn" id="knotsModeBtn" onclick="setMode('knots')">Knots</button>
   </div>
 
   <div class="category-bar" id="catBar"></div>
@@ -282,7 +340,18 @@
     <div class="palette" id="palette"></div>
   </div>
 
-  <script src="cards.js?v=5"></script>
+  <div id="knotArea" class="hidden">
+    <p class="diagram-intro">Drag each <strong>knot name</strong> onto the knot it belongs to. Six knots, six chips. Hit <strong>Check</strong> when you're done.</p>
+    <div class="knot-stage" id="knotStage"></div>
+    <div class="diagram-controls">
+      <button class="check-btn" onclick="checkKnots()">Check</button>
+      <button class="reset-btn" onclick="resetKnots()">Reset</button>
+      <div class="diagram-score" id="knotScore">0 / 6 placed</div>
+    </div>
+    <div class="palette" id="knotPalette"></div>
+  </div>
+
+  <script src="cards.js?v=6"></script>
   <script>
     currentUser = localStorage.getItem("dockstars:currentUser");
     renderUserBar();
@@ -290,6 +359,7 @@
     renderCatBar();
     showStudyCard();
     renderDiagram();
+    renderKnots();
   </script>
 </body>
 </html>

@@ -82,7 +82,7 @@ let currentUser = null;
 function userKey(u) { return `dockstars:v1:${u}`; }
 
 function loadUserState(u) {
-  const empty = { status: {}, quiz: {}, diagram: null };
+  const empty = { status: {}, quiz: {}, diagram: null, knot: null };
   if (!u) return empty;
   try {
     const raw = localStorage.getItem(userKey(u));
@@ -91,7 +91,8 @@ function loadUserState(u) {
     return {
       status: parsed.status || {},
       quiz: parsed.quiz || {},
-      diagram: parsed.diagram || null
+      diagram: parsed.diagram || null,
+      knot: parsed.knot || null
     };
   } catch (e) {
     return empty;
@@ -209,14 +210,19 @@ function setMode(m) {
   document.getElementById("quizModeBtn").classList.toggle("active", m === "quiz");
   const diagramBtn = document.getElementById("diagramModeBtn");
   if (diagramBtn) diagramBtn.classList.toggle("active", m === "diagram");
+  const knotsBtn = document.getElementById("knotsModeBtn");
+  if (knotsBtn) knotsBtn.classList.toggle("active", m === "knots");
   document.getElementById("studyArea").classList.toggle("hidden", m !== "study");
   document.getElementById("quizArea").classList.toggle("hidden", m !== "quiz");
   const diagramArea = document.getElementById("diagramArea");
   if (diagramArea) diagramArea.classList.toggle("hidden", m !== "diagram");
+  const knotArea = document.getElementById("knotArea");
+  if (knotArea) knotArea.classList.toggle("hidden", m !== "knots");
   const progressRow = document.getElementById("progressRow");
   const catBar = document.getElementById("catBar");
-  if (progressRow) progressRow.style.display = m === "diagram" ? "none" : "";
-  if (catBar) catBar.style.display = m === "diagram" ? "none" : "";
+  const hideChrome = m === "diagram" || m === "knots";
+  if (progressRow) progressRow.style.display = hideChrome ? "none" : "";
+  if (catBar) catBar.style.display = hideChrome ? "none" : "";
   flipped = false;
   updateView();
 }
@@ -602,4 +608,187 @@ function checkDiagram() {
 
 function resetDiagram() {
   renderDiagram();
+}
+
+const knotPositions = [
+  { id: "k1", x: 30, y: 22, label: "Figure 8" },
+  { id: "k2", x: 72, y: 22, label: "Bowline" },
+  { id: "k3", x: 17, y: 52, label: "Clove Hitch" },
+  { id: "k4", x: 50, y: 52, label: "Cleat Hitch" },
+  { id: "k5", x: 83, y: 52, label: "Round Turn & Two Half Hitches" },
+  { id: "k6", x: 50, y: 84, label: "Square Knot" }
+];
+
+let knotState = {};
+
+function knotIconSvg(label) {
+  if (label === "Figure 8") {
+    return `<svg viewBox="0 0 40 40" width="40" height="40"><path d="M 10 28 Q 20 10 30 28 Q 20 40 10 28 M 10 28 Q 20 22 30 28" fill="none" stroke="#d0d0d0" stroke-width="4" stroke-linecap="round"/></svg>`;
+  }
+  if (label === "Bowline") {
+    return `<svg viewBox="0 0 40 40" width="40" height="40"><circle cx="14" cy="20" r="7" fill="none" stroke="#d0d0d0" stroke-width="3.5"/><path d="M 21 20 L 36 20 M 14 27 Q 20 30 28 27" fill="none" stroke="#d0d0d0" stroke-width="3.5" stroke-linecap="round"/></svg>`;
+  }
+  if (label === "Clove Hitch") {
+    return `<svg viewBox="0 0 40 40" width="40" height="40"><rect x="17" y="4" width="6" height="32" fill="#8a99b8"/><path d="M 4 14 Q 20 10 36 14 M 4 22 Q 20 26 36 22 M 4 28 Q 20 32 36 28" fill="none" stroke="#d0d0d0" stroke-width="3" stroke-linecap="round"/></svg>`;
+  }
+  if (label === "Cleat Hitch") {
+    return `<svg viewBox="0 0 40 40" width="40" height="40"><rect x="6" y="18" width="28" height="6" rx="2" fill="#8a99b8"/><circle cx="10" cy="21" r="3" fill="#8a99b8"/><circle cx="30" cy="21" r="3" fill="#8a99b8"/><path d="M 4 28 Q 15 22 25 28 Q 35 34 38 28" fill="none" stroke="#d0d0d0" stroke-width="3.5" stroke-linecap="round"/></svg>`;
+  }
+  if (label === "Round Turn & Two Half Hitches") {
+    return `<svg viewBox="0 0 40 40" width="40" height="40"><rect x="17" y="4" width="6" height="32" fill="#8a99b8"/><circle cx="20" cy="14" r="7" fill="none" stroke="#d0d0d0" stroke-width="3"/><path d="M 6 26 Q 20 34 34 26" fill="none" stroke="#d0d0d0" stroke-width="3" stroke-linecap="round"/></svg>`;
+  }
+  if (label === "Square Knot") {
+    return `<svg viewBox="0 0 40 40" width="40" height="40"><path d="M 4 20 L 18 20" fill="none" stroke="#d0d0d0" stroke-width="3.5" stroke-linecap="round"/><path d="M 22 20 L 36 20" fill="none" stroke="#d94026" stroke-width="3.5" stroke-linecap="round"/><circle cx="20" cy="20" r="5" fill="none" stroke="#1e2d6b" stroke-width="3"/></svg>`;
+  }
+  return "";
+}
+
+function renderKnots() {
+  const stage = document.getElementById("knotStage");
+  const palette = document.getElementById("knotPalette");
+  if (!stage || !palette) return;
+
+  stage.querySelectorAll(".knot-slot").forEach(el => el.remove());
+  knotState = {};
+
+  knotPositions.forEach(pos => {
+    const slot = document.createElement("div");
+    slot.className = "knot-slot";
+    slot.style.left = pos.x + "%";
+    slot.style.top = pos.y + "%";
+    slot.innerHTML = `
+      <div class="knot-icon">${knotIconSvg(pos.label)}</div>
+      <div class="drop-zone knot-drop" data-knot-zone="${pos.id}" data-expected="${pos.label}">drop here</div>
+    `;
+    stage.appendChild(slot);
+  });
+
+  stage.querySelectorAll(".drop-zone").forEach(zone => {
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      const chipId = e.dataTransfer.getData("text/plain");
+      if (!chipId || !chipId.startsWith("kchip-")) return;
+      dropChipOnKnotZone(chipId, zone.dataset.knotZone);
+    });
+    zone.addEventListener("click", () => {
+      if (zone.classList.contains("filled")) clearKnotZone(zone.dataset.knotZone);
+    });
+  });
+
+  const chips = knotPositions.map(p => ({ id: `kchip-${p.id}`, label: p.label }));
+  for (let i = chips.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [chips[i], chips[j]] = [chips[j], chips[i]];
+  }
+
+  palette.innerHTML = "";
+  chips.forEach(chip => {
+    const el = document.createElement("div");
+    el.className = "chip";
+    el.draggable = true;
+    el.textContent = chip.label;
+    el.dataset.chipId = chip.id;
+    el.dataset.label = chip.label;
+    el.addEventListener("dragstart", e => {
+      e.dataTransfer.setData("text/plain", chip.id);
+      el.classList.add("dragging");
+    });
+    el.addEventListener("dragend", () => el.classList.remove("dragging"));
+    palette.appendChild(el);
+  });
+
+  updateKnotScore();
+}
+
+function knotChip(chipId) {
+  return document.querySelector(`#knotPalette .chip[data-chip-id="${chipId}"]`);
+}
+
+function knotZoneEl(zoneId) {
+  return document.querySelector(`.drop-zone[data-knot-zone="${zoneId}"]`);
+}
+
+function dropChipOnKnotZone(chipId, zoneId) {
+  const chip = knotChip(chipId);
+  if (!chip) return;
+  const existing = knotState[zoneId];
+  if (existing) returnKnotChip(existing);
+  knotState[zoneId] = chipId;
+  chip.classList.add("used");
+  const zone = knotZoneEl(zoneId);
+  zone.textContent = chip.dataset.label;
+  zone.classList.remove("correct", "wrong");
+  zone.classList.add("filled");
+  updateKnotScore();
+}
+
+function clearKnotZone(zoneId) {
+  const chipId = knotState[zoneId];
+  if (!chipId) return;
+  returnKnotChip(chipId);
+  delete knotState[zoneId];
+  const zone = knotZoneEl(zoneId);
+  zone.textContent = "drop here";
+  zone.classList.remove("filled", "correct", "wrong");
+  updateKnotScore();
+}
+
+function returnKnotChip(chipId) {
+  const chip = knotChip(chipId);
+  if (chip) chip.classList.remove("used");
+}
+
+function updateKnotScore() {
+  const placed = Object.keys(knotState).length;
+  const total = knotPositions.length;
+  const el = document.getElementById("knotScore");
+  if (el) {
+    el.textContent = `${placed} / ${total} placed`;
+    el.classList.remove("all-correct");
+  }
+}
+
+function checkKnots() {
+  let correct = 0;
+  knotPositions.forEach(pos => {
+    const chipId = knotState[pos.id];
+    const zone = knotZoneEl(pos.id);
+    if (!chipId) {
+      zone.classList.remove("correct", "wrong");
+      return;
+    }
+    const chip = knotChip(chipId);
+    const label = chip ? chip.dataset.label : "";
+    if (label === pos.label) {
+      zone.classList.add("correct");
+      zone.classList.remove("wrong");
+      correct++;
+    } else {
+      zone.classList.add("wrong");
+      zone.classList.remove("correct");
+    }
+  });
+  const el = document.getElementById("knotScore");
+  const total = knotPositions.length;
+  if (el) {
+    el.textContent = `${correct} / ${total} correct`;
+    el.classList.toggle("all-correct", correct === total);
+  }
+  persistKnot({ correct, total });
+}
+
+function resetKnots() {
+  renderKnots();
+}
+
+function persistKnot(result) {
+  if (!currentUser) return;
+  const state = loadUserState(currentUser);
+  if (!state.knot || result.correct > state.knot.correct) {
+    state.knot = { correct: result.correct, total: result.total, ts: Date.now() };
+    saveUserState(currentUser, state);
+  }
 }
