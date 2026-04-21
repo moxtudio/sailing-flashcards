@@ -666,9 +666,9 @@ function resetDiagram() {
 const knotPositions = [
   { id: "k1", x: 30, y: 22, label: "Figure 8",                        image: "knots/figure-8.png",     url: "https://www.animatedknots.com/figure-8-knot" },
   { id: "k2", x: 72, y: 22, label: "Bowline",                         image: "knots/bowline.png",      url: "https://www.animatedknots.com/bowline-knot" },
-  { id: "k3", x: 17, y: 52, label: "Clove Hitch",                     image: "knots/clove-hitch.png",  url: "https://www.animatedknots.com/clove-hitch-knot-end" },
-  { id: "k4", x: 50, y: 52, label: "Cleat Hitch",                     image: "knots/cleat-hitch.png",  url: "https://www.animatedknots.com/cleat-hitch-knot" },
-  { id: "k5", x: 83, y: 52, label: "Round Turn & Two Half Hitches",   image: "knots/round-turn.png",   url: "https://www.animatedknots.com/round-turn-two-half-hitches" },
+  { id: "k3", x: 17, y: 52, label: "Clove Hitch",                     image: "knots/clove-hitch.png",  url: "https://www.animatedknots.com/clove-hitch-knot-rope-end" },
+  { id: "k4", x: 50, y: 52, label: "Cleat Hitch",                     image: "knots/cleat-hitch.png",  url: "https://www.animatedknots.com/cleat-hitch-knot-dock-line" },
+  { id: "k5", x: 83, y: 52, label: "Round Turn & Two Half Hitches",   image: "knots/round-turn.png",   url: "https://www.animatedknots.com/round-turn-two-half-hitches-knot" },
   { id: "k6", x: 50, y: 84, label: "Square Knot",                     image: "knots/reef.png",         url: "https://www.animatedknots.com/square-knot" }
 ];
 
