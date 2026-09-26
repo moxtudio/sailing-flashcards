@@ -65,7 +65,10 @@ const allCards = [
   { front: "Lift", back: "A favorable wind shift that allows the boat to head up closer to its destination.", category: "Weather" },
 
   { front: "Knot (speed)", back: "A unit of speed equal to one nautical mile per hour (about 1.15 mph or 1.85 km/h).", category: "Navigation" },
-  { front: "Bearing", back: "The direction from one point to another, measured in degrees from north.", category: "Navigation" }
+  { front: "Bearing", back: "The direction from one point to another, measured in degrees from north.", category: "Navigation" },
+
+  { front: "Penalty for crossing the start line early", back: "Go back and start again.", category: "Racing" },
+  { front: "OCS", back: "On Course Side: over the starting line at your starting signal. The race committee flies flag X (individual recall). Return to the pre-start side of the line and restart, or be scored OCS.", category: "Racing" }
 ];
 
 let deck = allCards.map(c => ({ ...c, status: null }));

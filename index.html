@@ -25,6 +25,8 @@
     .brand-logo { width: 96px; height: 96px; flex-shrink: 0; object-fit: contain; }
     .brand-title h1 { font-size: 30px; font-weight: 800; color: var(--ds-navy); letter-spacing: 0.5px; line-height: 1.1; }
     .brand-title h1 .accent { color: var(--ds-red); }
+    .study-notice { max-width: 620px; margin: -8px auto 20px; padding: 12px 16px; border-radius: 12px; background: #fff8e8; border: 1px solid #f0d9a0; color: var(--ds-text); font-size: 13px; line-height: 1.5; text-align: left; }
+    .study-notice strong { color: var(--ds-navy); }
     .subtitle { font-size: 14px; color: var(--ds-text-dim); margin-bottom: 24px; }
     .user-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; justify-content: center; max-width: 900px; }
     .user-prompt { font-size: 13px; color: var(--ds-text-dim); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
@@ -334,7 +336,11 @@
       <div style="font-size:13px;color:var(--ds-blue);font-weight:700;letter-spacing:2px;text-transform:uppercase;">Sailing Flash Cards</div>
     </div>
   </div>
-  <p class="subtitle">Executive Leadership 1 | Week 5 &middot; 60 cards &middot; Study, Quiz &amp; Diagram</p>
+  <p class="subtitle">Executive Leadership 1 | Week 5 &middot; 62 cards &middot; Study, Quiz &amp; Diagram</p>
+
+  <div class="study-notice" role="note">
+    <strong>Study aid only.</strong> This site was built with AI assistance to help teams study, and it may contain errors. You are responsible for verifying anything here against your course materials, your skipper and instructors, and the official Racing Rules of Sailing. It is not a substitute for safety instruction or direction on the water.
+  </div>
 
   <div class="user-bar">
     <span class="user-prompt">Who's studying?</span>
@@ -469,7 +475,7 @@
     <div class="palette" id="knotPalette"></div>
   </div>
 
-  <script src="cards.js?v=9"></script>
+  <script src="cards.js?v=10"></script>
   <script>
     currentUser = localStorage.getItem("dockstars:currentUser");
     renderUserBar();
